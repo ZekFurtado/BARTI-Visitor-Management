@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332690330592",
+    "project_id": "visitor-management-e97f4",
+    "storage_bucket": "visitor-management-e97f4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332690330592:android:6b8cdd21de8baaf41b1185",
+        "android_client_info": {
+          "package_name": "com.shrameco.visitor_management"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANl6YGWI1aUHQohTiVi8b_bKaqMd9pikk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
