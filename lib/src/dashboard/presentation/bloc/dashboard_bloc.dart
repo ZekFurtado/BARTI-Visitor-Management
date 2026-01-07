@@ -10,21 +10,12 @@ part 'dashboard_state.dart';
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final GetGatekeeperStats _getGatekeeperStats;
   final GetEmployeeStats _getEmployeeStats;
-  final GetTodayVisitorCount _getTodayVisitorCount;
-  final GetPendingApprovalsCount _getPendingApprovalsCount;
-  final GetTotalPendingApprovals _getTotalPendingApprovals;
 
   DashboardBloc({
     required GetGatekeeperStats getGatekeeperStats,
     required GetEmployeeStats getEmployeeStats,
-    required GetTodayVisitorCount getTodayVisitorCount,
-    required GetPendingApprovalsCount getPendingApprovalsCount,
-    required GetTotalPendingApprovals getTotalPendingApprovals,
   })  : _getGatekeeperStats = getGatekeeperStats,
         _getEmployeeStats = getEmployeeStats,
-        _getTodayVisitorCount = getTodayVisitorCount,
-        _getPendingApprovalsCount = getPendingApprovalsCount,
-        _getTotalPendingApprovals = getTotalPendingApprovals,
         super(const DashboardInitial()) {
     on<GetGatekeeperStatsEvent>(_onGetGatekeeperStats);
     on<GetEmployeeStatsEvent>(_onGetEmployeeStats);

@@ -69,9 +69,6 @@ Future<void> init() async {
       () => DashboardBloc(
         getGatekeeperStats: sl(),
         getEmployeeStats: sl(),
-        getTodayVisitorCount: sl(),
-        getPendingApprovalsCount: sl(),
-        getTotalPendingApprovals: sl(),
       ),
     )
     /// USE CASES
