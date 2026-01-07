@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:visitor_management/core/widgets/loader_dialog.dart';
+import 'package:visitor_management/core/utils/routes.dart';
 import 'package:visitor_management/src/authentication/presentation/bloc/authentication_bloc.dart';
 
 class RegistrationForm extends StatefulWidget {
@@ -69,7 +70,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
         if (state is Authenticated) {
           log('User registered successfully: ${state.visitor.email}');
-          Navigator.of(context).pushReplacementNamed('/home', arguments: state.visitor);
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            Routes.home, 
+            (route) => false, 
+            arguments: state.visitor
+          );
         } else if (state is AuthenticationError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

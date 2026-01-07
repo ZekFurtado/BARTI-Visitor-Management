@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/visitor.dart';
-import '../../domain/usecases/register_visitor.dart';
 import '../../domain/usecases/get_visitors.dart';
 import '../../domain/usecases/update_visitor_status.dart';
 import '../../../visitor/data/models/visitor_model.dart';
@@ -14,7 +13,6 @@ part 'visitor_event.dart';
 part 'visitor_state.dart';
 
 class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
-  final RegisterVisitor _registerVisitor;
   final GetVisitors _getVisitors;
   final GetVisitorsForEmployee _getVisitorsForEmployee;
   final GetVisitorsByStatus _getVisitorsByStatus;
@@ -22,14 +20,12 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
   final VisitorRemoteDataSource _remoteDataSource;
 
   VisitorBloc({
-    required RegisterVisitor registerVisitor,
     required GetVisitors getVisitors,
     required GetVisitorsForEmployee getVisitorsForEmployee,
     required GetVisitorsByStatus getVisitorsByStatus,
     required UpdateVisitorStatus updateVisitorStatus,
     required VisitorRemoteDataSource remoteDataSource,
-  })  : _registerVisitor = registerVisitor,
-        _getVisitors = getVisitors,
+  })  : _getVisitors = getVisitors,
         _getVisitorsForEmployee = getVisitorsForEmployee,
         _getVisitorsByStatus = getVisitorsByStatus,
         _updateVisitorStatus = updateVisitorStatus,

@@ -32,4 +32,7 @@ abstract class VisitorRepository {
 
   /// Get visitors by date range
   ResultFuture<List<Visitor>> getVisitorsByDateRange(DateTime startDate, DateTime endDate);
+
+  /// Get visitor history by phone number
+  ResultFuture<List<Visitor>> getVisitorHistoryByPhone(String phoneNumber);
 }

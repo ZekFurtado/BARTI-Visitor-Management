@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:visitor_management/core/services/injection_container.dart';
 import 'package:visitor_management/src/authentication/domain/entities/user.dart';
 import 'package:visitor_management/src/employee/presentation/widgets/employee_search_dialog.dart';
 import 'package:visitor_management/src/visitor/presentation/bloc/visitor_bloc.dart';
@@ -17,10 +16,7 @@ class VisitorRegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<VisitorBloc>(),
-      child: _VisitorRegistrationView(gatekeeper: gatekeeper),
-    );
+    return _VisitorRegistrationView(gatekeeper: gatekeeper);
   }
 }
 

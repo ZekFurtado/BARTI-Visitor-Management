@@ -163,4 +163,18 @@ class VisitorRepositoryImpl implements VisitorRepository {
       return Left(ServerFailure(message: e.toString(), statusCode: 'unknown'));
     }
   }
+
+  @override
+  ResultFuture<List<Visitor>> getVisitorHistoryByPhone(String phoneNumber) async {
+    try {
+      final result = await remoteDataSource.getVisitorHistoryByPhone(phoneNumber);
+      return Right(result);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
+    } catch (e) {
+      return Left(ServerFailure(message: e.toString(), statusCode: 'unknown'));
+    }
+  }
 }

@@ -18,9 +18,17 @@ import 'package:visitor_management/src/visitor/data/datasources/visitor_remote_d
 import 'package:visitor_management/src/visitor/data/repositories/visitor_repository_impl.dart';
 import 'package:visitor_management/src/visitor/domain/repositories/visitor_repository.dart';
 import 'package:visitor_management/src/visitor/domain/usecases/get_visitors.dart';
+import 'package:visitor_management/src/visitor/domain/usecases/get_visitor_history.dart';
 import 'package:visitor_management/src/visitor/domain/usecases/register_visitor.dart';
 import 'package:visitor_management/src/visitor/domain/usecases/update_visitor_status.dart';
 import 'package:visitor_management/src/visitor/presentation/bloc/visitor_bloc.dart';
+import 'package:visitor_management/src/visitor/presentation/bloc/visitor_history_bloc.dart';
+import 'package:visitor_management/src/dashboard/data/datasources/dashboard_remote_data_source.dart';
+import 'package:visitor_management/src/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:visitor_management/src/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:visitor_management/src/dashboard/domain/usecases/get_dashboard_stats.dart';
+import 'package:visitor_management/src/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'notification_service.dart';
 
 final sl = GetIt.instance;
 
@@ -41,12 +49,29 @@ Future<void> init() async {
     /// Visitor Management
     ..registerFactory(
       () => VisitorBloc(
-        registerVisitor: sl(),
         getVisitors: sl(),
         getVisitorsForEmployee: sl(),
         getVisitorsByStatus: sl(),
         updateVisitorStatus: sl(),
         remoteDataSource: sl(),
+      ),
+    )
+    /// Visitor History
+    ..registerFactory(
+      () => VisitorHistoryBloc(
+        getVisitorHistory: sl(),
+        getRecentVisitors: sl(),
+        getVisitorsByDateRange: sl(),
+      ),
+    )
+    /// Dashboard Statistics
+    ..registerFactory(
+      () => DashboardBloc(
+        getGatekeeperStats: sl(),
+        getEmployeeStats: sl(),
+        getTodayVisitorCount: sl(),
+        getPendingApprovalsCount: sl(),
+        getTotalPendingApprovals: sl(),
       ),
     )
     /// USE CASES
@@ -62,6 +87,16 @@ Future<void> init() async {
     ..registerLazySingleton(() => GetVisitorsForEmployee(sl()))
     ..registerLazySingleton(() => GetVisitorsByStatus(sl()))
     ..registerLazySingleton(() => UpdateVisitorStatus(sl()))
+    /// Visitor History
+    ..registerLazySingleton(() => GetVisitorHistory(sl()))
+    ..registerLazySingleton(() => GetRecentVisitors(sl()))
+    ..registerLazySingleton(() => GetVisitorsByDateRange(sl()))
+    /// Dashboard Statistics
+    ..registerLazySingleton(() => GetGatekeeperStats(sl()))
+    ..registerLazySingleton(() => GetEmployeeStats(sl()))
+    ..registerLazySingleton(() => GetTodayVisitorCount(sl()))
+    ..registerLazySingleton(() => GetPendingApprovalsCount(sl()))
+    ..registerLazySingleton(() => GetTotalPendingApprovals(sl()))
     /// REPOSITORIES
     /// Authentication
     ..registerLazySingleton<AuthRepository>(
@@ -70,6 +105,10 @@ Future<void> init() async {
     /// Visitor Management
     ..registerLazySingleton<VisitorRepository>(
       () => VisitorRepositoryImpl(sl()),
+    )
+    /// Dashboard Statistics
+    ..registerLazySingleton<DashboardRepository>(
+      () => DashboardRepositoryImpl(sl()),
     )
     /// DATA SOURCES
     /// Authentication
@@ -84,9 +123,17 @@ Future<void> init() async {
         httpClient: sl(),
       ),
     )
+    /// Dashboard Statistics
+    ..registerLazySingleton<DashboardRemoteDataSource>(
+      () => DashboardRemoteDataSourceImpl(
+        firestore: sl(),
+      ),
+    )
     /// EXTERNAL DEPENDENCIES
     ..registerLazySingleton(http.Client.new)
     ..registerLazySingleton(() => sharedPreferences)
+    /// Services
+    ..registerLazySingleton(() => NotificationService())
     /// Firebase
     ..registerLazySingleton(() => FirebaseAuth.instance)
     ..registerLazySingleton(() => FirebaseFirestore.instance)

@@ -3,9 +3,10 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
+
 import '../../../../core/errors/exceptions.dart';
-import '../models/visitor_model.dart';
 import '../../domain/entities/visitor.dart';
+import '../models/visitor_model.dart';
 
 abstract class VisitorRemoteDataSource {
   /// Register a new visitor
@@ -24,7 +25,10 @@ abstract class VisitorRemoteDataSource {
   Future<List<VisitorModel>> getVisitorsByStatus(VisitorStatus status);
 
   /// Update visitor status
-  Future<VisitorModel> updateVisitorStatus(String visitorId, VisitorStatus status);
+  Future<VisitorModel> updateVisitorStatus(
+    String visitorId,
+    VisitorStatus status,
+  );
 
   /// Get visitor by ID
   Future<VisitorModel> getVisitorById(String visitorId);
@@ -36,7 +40,14 @@ abstract class VisitorRemoteDataSource {
   Future<void> deleteVisitor(String visitorId);
 
   /// Send notification to employee (via REST API)
-  Future<void> notifyEmployee(String employeeId, String visitorId, String message);
+  Future<void> notifyEmployee(
+    String employeeId,
+    String visitorId,
+    String message,
+  );
+
+  /// Get visitor history by phone number
+  Future<List<VisitorModel>> getVisitorHistoryByPhone(String phoneNumber);
 }
 
 class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
@@ -54,8 +65,10 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   Future<VisitorModel> registerVisitor(VisitorModel visitor) async {
     try {
       // Add visitor to Firestore
-      final docRef = await firestore.collection('visitors').add(visitor.toFirestore());
-      
+      final docRef = await firestore
+          .collection('visitors')
+          .add(visitor.toFirestore());
+
       // Get the created visitor with ID
       final doc = await docRef.get();
       return VisitorModel.fromFirestore(doc);
@@ -191,7 +204,10 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   }
 
   @override
-  Future<VisitorModel> updateVisitorStatus(String visitorId, VisitorStatus status) async {
+  Future<VisitorModel> updateVisitorStatus(
+    String visitorId,
+    VisitorStatus status,
+  ) async {
     try {
       await firestore.collection('visitors').doc(visitorId).update({
         'status': status.value,
@@ -223,7 +239,7 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   Future<VisitorModel> getVisitorById(String visitorId) async {
     try {
       final doc = await firestore.collection('visitors').doc(visitorId).get();
-      
+
       if (!doc.exists) {
         throw const ServerException(
           statusCode: '404',
@@ -301,12 +317,16 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   }
 
   @override
-  Future<void> notifyEmployee(String employeeId, String visitorId, String message) async {
+  Future<void> notifyEmployee(
+    String employeeId,
+    String visitorId,
+    String message,
+  ) async {
     try {
       // This would typically call a REST API endpoint for notifications
       // For now, we'll simulate with a delay
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // TODO: Implement actual REST API call for notifications
       // Example:
       // final response = await httpClient.post(
@@ -318,7 +338,7 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
       //     'message': message,
       //   }),
       // );
-      // 
+      //
       // if (response.statusCode != 200) {
       //   throw ServerException(
       //     statusCode: response.statusCode.toString(),
@@ -334,6 +354,38 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
       throw ServerException(
         statusCode: 'unknown',
         message: 'An unexpected error occurred while sending notification: $e',
+      );
+    }
+  }
+
+  @override
+  Future<List<VisitorModel>> getVisitorHistoryByPhone(
+    String phoneNumber,
+  ) async {
+    try {
+      final querySnapshot = await firestore
+          .collection('visitors')
+          .where('phoneNumber', isEqualTo: phoneNumber)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => VisitorModel.fromFirestore(doc))
+          .toList();
+    } on FirebaseException catch (e) {
+      throw ServerException(
+        statusCode: e.code,
+        message: e.message ?? 'Failed to get visitor history',
+      );
+    } on SocketException {
+      throw const NetworkException(
+        statusCode: '404',
+        message: 'No Internet. Please check your network connection',
+      );
+    } catch (e) {
+      throw ServerException(
+        statusCode: 'unknown',
+        message: 'An unexpected error occurred: $e',
       );
     }
   }

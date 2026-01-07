@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconly/iconly.dart';
 import 'package:visitor_management/src/authentication/presentation/bloc/auth_cubit.dart';
 
+import '../../../../../core/utils/routes.dart';
 import '../../bloc/authentication_bloc.dart';
 
 class LoginForm extends StatelessWidget {
@@ -19,7 +20,7 @@ class LoginForm extends StatelessWidget {
         if (state is Authenticated) {
           // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Welcome, ${state.visitor.name}")));
           Navigator.pushNamedAndRemoveUntil(
-              context, '/home', ModalRoute.withName('/'),
+              context, Routes.home, (route) => false,
               arguments: state.visitor);
         } else if (state is AuthenticationError) {
           ScaffoldMessenger.of(context)
@@ -164,7 +165,7 @@ class LoginForm extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pushNamed('/registration');
+                  Navigator.of(context).pushNamed(Routes.registration);
                 },
                 child: Text(
                   'Create Account',
