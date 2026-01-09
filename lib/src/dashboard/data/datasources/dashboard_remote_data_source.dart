@@ -41,44 +41,51 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final startOfDay = DateTime(now.year, now.month, now.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Get all visitors for today
-      final todayVisitorsQuery = await firestore
-          .collection('visitors')
-          .where(
-            'createdAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .where('createdAt', isLessThan: Timestamp.fromDate(endOfDay))
+      // Get all visitor profiles to calculate statistics from visits
+      final profilesQuery = await firestore
+          .collection('visitor_profiles')
           .get();
 
-      final todayVisitors = todayVisitorsQuery.docs;
-
-      // Count by status
+      int todayVisitorsCount = 0;
       int pendingCount = 0;
       int approvedCount = 0;
       int rejectedCount = 0;
       int completedCount = 0;
 
-      for (var doc in todayVisitors) {
-        final status = parseVisitorStatus(doc.data()['status'] as String?);
-        switch (status) {
-          case VisitorStatus.pending:
-            pendingCount++;
-            break;
-          case VisitorStatus.approved:
-            approvedCount++;
-            break;
-          case VisitorStatus.rejected:
-            rejectedCount++;
-            break;
-          case VisitorStatus.completed:
-            completedCount++;
-            break;
+      for (var profileDoc in profilesQuery.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
+        
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
+          
+          if (createdAt != null && 
+              createdAt.isAfter(startOfDay) && 
+              createdAt.isBefore(endOfDay)) {
+            todayVisitorsCount++;
+            
+            final status = parseVisitorStatus(visitMap['status'] as String?);
+            switch (status) {
+              case VisitorStatus.pending:
+                pendingCount++;
+                break;
+              case VisitorStatus.approved:
+                approvedCount++;
+                break;
+              case VisitorStatus.rejected:
+                rejectedCount++;
+                break;
+              case VisitorStatus.completed:
+                completedCount++;
+                break;
+            }
+          }
         }
       }
 
       return DashboardStatsModel(
-        todayVisitors: todayVisitors.length,
+        todayVisitors: todayVisitorsCount,
         pendingApprovals: pendingCount,
         approvedToday: approvedCount,
         rejectedToday: rejectedCount,
@@ -110,51 +117,63 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final startOfDay = DateTime(now.year, now.month, now.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      // Get visitors for this employee for today
-      final employeeVisitorsQuery = await firestore
-          .collection('visitors')
-          .where('employeeToMeetId', isEqualTo: employeeId)
-          .where(
-            'createdAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .where('createdAt', isLessThan: Timestamp.fromDate(endOfDay))
+      // Get all visitor profiles to calculate statistics from visits for this employee
+      final profilesQuery = await firestore
+          .collection('visitor_profiles')
           .get();
 
-      final employeeVisitors = employeeVisitorsQuery.docs;
-
-      // Count pending approvals for this employee
-      final pendingQuery = await firestore
-          .collection('visitors')
-          .where('employeeToMeetId', isEqualTo: employeeId)
-          .where('status', isEqualTo: 'pending')
-          .get();
-
-      // Count by status for today
+      int todayVisitorsCount = 0;
+      int pendingCount = 0;
       int approvedCount = 0;
       int rejectedCount = 0;
       int completedCount = 0;
 
-      for (var doc in employeeVisitors) {
-        final status = parseVisitorStatus(doc.data()['status'] as String?);
-        switch (status) {
-          case VisitorStatus.approved:
-            approvedCount++;
-            break;
-          case VisitorStatus.rejected:
-            rejectedCount++;
-            break;
-          case VisitorStatus.completed:
-            completedCount++;
-            break;
-          case VisitorStatus.pending:
-            break; // Already counted separately
+      for (var profileDoc in profilesQuery.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
+        
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final employeeToMeetId = visitMap['employeeToMeetId'] as String?;
+          
+          // Only count visits for this specific employee
+          if (employeeToMeetId == employeeId) {
+            final status = parseVisitorStatus(visitMap['status'] as String?);
+            
+            // Count pending approvals (all time for this employee)
+            if (status == VisitorStatus.pending) {
+              pendingCount++;
+            }
+            
+            // Count today's visitors for this employee
+            final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
+            if (createdAt != null && 
+                createdAt.isAfter(startOfDay) && 
+                createdAt.isBefore(endOfDay)) {
+              todayVisitorsCount++;
+              
+              switch (status) {
+                case VisitorStatus.approved:
+                  approvedCount++;
+                  break;
+                case VisitorStatus.rejected:
+                  rejectedCount++;
+                  break;
+                case VisitorStatus.completed:
+                  completedCount++;
+                  break;
+                case VisitorStatus.pending:
+                  // Already counted above
+                  break;
+              }
+            }
+          }
         }
       }
 
       return DashboardStatsModel(
-        todayVisitors: employeeVisitors.length,
-        pendingApprovals: pendingQuery.docs.length,
+        todayVisitors: todayVisitorsCount,
+        pendingApprovals: pendingCount,
         approvedToday: approvedCount,
         rejectedToday: rejectedCount,
         completedToday: completedCount,
@@ -185,16 +204,30 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final startOfDay = DateTime(now.year, now.month, now.day);
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      final query = await firestore
-          .collection('visitors')
-          .where(
-            'createdAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .where('createdAt', isLessThan: Timestamp.fromDate(endOfDay))
+      // Get all visitor profiles to count today's visits
+      final profilesQuery = await firestore
+          .collection('visitor_profiles')
           .get();
 
-      return query.docs.length;
+      int todayVisitorCount = 0;
+
+      for (var profileDoc in profilesQuery.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
+        
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
+          
+          if (createdAt != null && 
+              createdAt.isAfter(startOfDay) && 
+              createdAt.isBefore(endOfDay)) {
+            todayVisitorCount++;
+          }
+        }
+      }
+
+      return todayVisitorCount;
     } on FirebaseException catch (e) {
       throw ServerException(
         statusCode: e.code,
@@ -216,13 +249,29 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<int> getPendingApprovalsCount(String employeeId) async {
     try {
-      final query = await firestore
-          .collection('visitors')
-          .where('employeeToMeetId', isEqualTo: employeeId)
-          .where('status', isEqualTo: 'pending')
+      // Get all visitor profiles to count pending visits for this employee
+      final profilesQuery = await firestore
+          .collection('visitor_profiles')
           .get();
 
-      return query.docs.length;
+      int pendingCount = 0;
+
+      for (var profileDoc in profilesQuery.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
+        
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final employeeToMeetId = visitMap['employeeToMeetId'] as String?;
+          final status = visitMap['status'] as String?;
+          
+          if (employeeToMeetId == employeeId && status == 'pending') {
+            pendingCount++;
+          }
+        }
+      }
+
+      return pendingCount;
     } on FirebaseException catch (e) {
       throw ServerException(
         statusCode: e.code,
@@ -244,12 +293,28 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Future<int> getTotalPendingApprovals() async {
     try {
-      final query = await firestore
-          .collection('visitors')
-          .where('status', isEqualTo: 'pending')
+      // Get all visitor profiles to count total pending visits
+      final profilesQuery = await firestore
+          .collection('visitor_profiles')
           .get();
 
-      return query.docs.length;
+      int totalPendingCount = 0;
+
+      for (var profileDoc in profilesQuery.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
+        
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final status = visitMap['status'] as String?;
+          
+          if (status == 'pending') {
+            totalPendingCount++;
+          }
+        }
+      }
+
+      return totalPendingCount;
     } on FirebaseException catch (e) {
       throw ServerException(
         statusCode: e.code,
@@ -271,11 +336,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Stream<DashboardStatsModel> getGatekeeperStatsStream() {
     return firestore
-        .collection('visitors')
+        .collection('visitor_profiles')
         .snapshots()
         .map((snapshot) {
       final now = DateTime.now();
       final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
 
       int totalRegistered = 0;
       int pendingApprovals = 0;
@@ -283,30 +349,34 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       int rejectedToday = 0;
       int completedToday = 0;
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+      for (final profileDoc in snapshot.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
         
-        if (createdAt != null && 
-            createdAt.year == now.year &&
-            createdAt.month == now.month &&
-            createdAt.day == now.day) {
-          totalRegistered++;
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
+          
+          if (createdAt != null && 
+              createdAt.isAfter(startOfDay) && 
+              createdAt.isBefore(endOfDay)) {
+            totalRegistered++;
 
-          final status = parseVisitorStatus(data['status'] as String?);
-          switch (status) {
-            case VisitorStatus.pending:
-              pendingApprovals++;
-              break;
-            case VisitorStatus.approved:
-              approvedToday++;
-              break;
-            case VisitorStatus.rejected:
-              rejectedToday++;
-              break;
-            case VisitorStatus.completed:
-              completedToday++;
-              break;
+            final status = parseVisitorStatus(visitMap['status'] as String?);
+            switch (status) {
+              case VisitorStatus.pending:
+                pendingApprovals++;
+                break;
+              case VisitorStatus.approved:
+                approvedToday++;
+                break;
+              case VisitorStatus.rejected:
+                rejectedToday++;
+                break;
+              case VisitorStatus.completed:
+                completedToday++;
+                break;
+            }
           }
         }
       }
@@ -330,11 +400,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   @override
   Stream<DashboardStatsModel> getEmployeeStatsStream(String employeeId) {
     return firestore
-        .collection('visitors')
-        .where('employeeToMeetId', isEqualTo: employeeId)
+        .collection('visitor_profiles')
         .snapshots()
         .map((snapshot) {
       final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
 
       int totalToday = 0;
       int pendingApprovals = 0;
@@ -342,36 +413,45 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       int rejectedToday = 0;
       int completedToday = 0;
 
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+      for (final profileDoc in snapshot.docs) {
+        final profileData = profileDoc.data();
+        final visits = profileData['visits'] as List<dynamic>? ?? [];
         
-        // Count pending approvals (all time for this employee)
-        final status = parseVisitorStatus(data['status'] as String?);
-        if (status == VisitorStatus.pending) {
-          pendingApprovals++;
-        }
-        
-        // Count today's visitors for this employee
-        if (createdAt != null && 
-            createdAt.year == now.year &&
-            createdAt.month == now.month &&
-            createdAt.day == now.day) {
-          totalToday++;
+        for (var visitData in visits) {
+          final visitMap = visitData as Map<String, dynamic>;
+          final employeeToMeetId = visitMap['employeeToMeetId'] as String?;
+          
+          // Only count visits for this specific employee
+          if (employeeToMeetId == employeeId) {
+            final status = parseVisitorStatus(visitMap['status'] as String?);
+            
+            // Count pending approvals (all time for this employee)
+            if (status == VisitorStatus.pending) {
+              pendingApprovals++;
+            }
+            
+            // Count today's visitors for this employee
+            final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
+            if (createdAt != null && 
+                createdAt.isAfter(startOfDay) && 
+                createdAt.isBefore(endOfDay)) {
+              totalToday++;
 
-          switch (status) {
-            case VisitorStatus.approved:
-              approvedToday++;
-              break;
-            case VisitorStatus.rejected:
-              rejectedToday++;
-              break;
-            case VisitorStatus.completed:
-              completedToday++;
-              break;
-            case VisitorStatus.pending:
-              // Already counted above
-              break;
+              switch (status) {
+                case VisitorStatus.approved:
+                  approvedToday++;
+                  break;
+                case VisitorStatus.rejected:
+                  rejectedToday++;
+                  break;
+                case VisitorStatus.completed:
+                  completedToday++;
+                  break;
+                case VisitorStatus.pending:
+                  // Already counted above
+                  break;
+              }
+            }
           }
         }
       }
