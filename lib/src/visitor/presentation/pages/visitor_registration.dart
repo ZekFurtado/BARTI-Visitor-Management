@@ -4,10 +4,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:iconly/iconly.dart';
 import 'package:visitor_management/src/authentication/domain/entities/user.dart';
 import 'package:visitor_management/src/employee/presentation/widgets/employee_search_dialog.dart';
+import 'package:visitor_management/src/employee/presentation/bloc/employee_bloc.dart';
+import 'package:visitor_management/core/services/injection_container.dart' as di;
 import 'package:visitor_management/src/visitor/presentation/bloc/visitor_bloc.dart';
+import 'package:visitor_management/src/visitor/presentation/bloc/visitor_profile_bloc.dart';
+import 'package:visitor_management/src/visitor/presentation/widgets/visitor_search_dialog.dart';
+import 'package:visitor_management/src/visitor/domain/entities/visitor_profile.dart';
 import 'package:visitor_management/core/widgets/loader_dialog.dart';
+import 'dart:async';
 
 class VisitorRegistrationScreen extends StatelessWidget {
   const VisitorRegistrationScreen({super.key, required this.gatekeeper});
@@ -16,7 +23,17 @@ class VisitorRegistrationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _VisitorRegistrationView(gatekeeper: gatekeeper);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(
+          value: context.read<VisitorBloc>(),
+        ),
+        BlocProvider<VisitorProfileBloc>(
+          create: (context) => di.sl<VisitorProfileBloc>(),
+        ),
+      ],
+      child: _VisitorRegistrationView(gatekeeper: gatekeeper),
+    );
   }
 }
 
@@ -42,6 +59,8 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
   LocalUser? _selectedEmployee;
   File? _capturedPhoto;
   final ImagePicker _picker = ImagePicker();
+  VisitorProfile? _selectedVisitorProfile;
+  Timer? _debounceTimer;
 
   final List<String> _durationOptions = [
     '30 minutes',
@@ -62,12 +81,15 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
     _emailController.dispose();
     _notesController.dispose();
     _expectedDurationController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<VisitorBloc, VisitorState>(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<VisitorBloc, VisitorState>(
       listener: (context, state) {
         if (state is VisitorLoading) {
           LoaderDialog.show(context);
@@ -76,6 +98,18 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Visitor registered successfully! Employee has been notified.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.of(context).pop();
+        } else if (state is VisitorProfileRegistered) {
+          LoaderDialog.hide(context);
+          final message = _selectedVisitorProfile != null 
+              ? 'New visit added to ${state.visitorProfile.name}\'s history! Employee has been notified.'
+              : 'Visitor profile created successfully! Employee has been notified.';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
               backgroundColor: Colors.green,
             ),
           );
@@ -90,6 +124,30 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
           );
         }
       },
+        ),
+        BlocListener<VisitorProfileBloc, VisitorProfileState>(
+          listener: (context, state) {
+            if (state is VisitorProfileLoaded && state.profile != null) {
+              // Auto-fill form when visitor profile is found
+              _fillFormWithVisitorData(state.profile!);
+              
+              // Show feedback that profile was found
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Found returning visitor: ${state.profile!.name}'),
+                  backgroundColor: Colors.green,
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            } else if (state is VisitorProfileLoaded && state.profile == null) {
+              // No profile found for this phone number
+              if (_phoneController.text.length >= 10) {
+                log('No existing profile found for phone: ${_phoneController.text}');
+              }
+            }
+          },
+        ),
+      ],
       child: Scaffold(
       appBar: AppBar(
         title: Text('Register Visitor'),
@@ -194,25 +252,113 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
               ),
               const SizedBox(height: 16),
 
-              // Phone Number
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // Phone Number with Search Option
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        prefixIcon: Icon(Icons.phone),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty && value.length < 10) {
+                          return 'Please enter a valid phone number';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        // Clear selected visitor profile when phone changes
+                        if (_selectedVisitorProfile != null && 
+                            value.trim() != _selectedVisitorProfile!.phoneNumber) {
+                          setState(() {
+                            _selectedVisitorProfile = null;
+                          });
+                        }
+                        
+                        // Debounced lookup for visitor profile
+                        _searchVisitorByPhone(value.trim());
+                      },
+                    ),
                   ),
-                ),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty && value.length < 10) {
-                    return 'Please enter a valid phone number';
-                  }
-                  return null;
-                },
+                  const SizedBox(width: 12),
+                  Column(
+                    children: [
+                      ElevatedButton.icon(
+                        icon: const Icon(IconlyLight.search, size: 18),
+                        label: const Text('Search'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                        onPressed: _showVisitorSearchDialog,
+                      ),
+                    ],
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
+
+              // Selected Visitor Info Card
+              if (_selectedVisitorProfile != null) ...[
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Icon(
+                          IconlyBold.user_3,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Existing Visitor Selected',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '${_selectedVisitorProfile!.visitCount} previous visit${_selectedVisitorProfile!.visitCount != 1 ? 's' : ''}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            IconlyLight.close_square,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _selectedVisitorProfile = null;
+                              _nameController.clear();
+                              _phoneController.clear();
+                              _emailController.clear();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // Email
               TextFormField(
@@ -533,7 +679,10 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
   void _selectEmployee() async {
     final selectedEmployee = await showDialog<LocalUser>(
       context: context,
-      builder: (context) => const EmployeeSearchDialog(),
+      builder: (context) => BlocProvider<EmployeeBloc>(
+        create: (context) => di.sl<EmployeeBloc>(),
+        child: const EmployeeSearchDialog(),
+      ),
     );
 
     if (selectedEmployee != null) {
@@ -555,9 +704,9 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
       return;
     }
 
-    // Trigger visitor registration via BLoC
+    // Trigger smart visitor registration via BLoC
     context.read<VisitorBloc>().add(
-      RegisterVisitorEvent(
+      SmartRegisterVisitorEvent(
         name: _nameController.text.trim(),
         origin: _originController.text.trim(),
         purpose: _purposeController.text.trim(),
@@ -578,6 +727,57 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
     );
   }
 
+  void _showVisitorSearchDialog() async {
+    final selectedVisitor = await showDialog<VisitorProfile>(
+      context: context,
+      builder: (context) => const VisitorSearchDialog(),
+    );
+
+    if (selectedVisitor != null) {
+      _fillFormWithVisitorData(selectedVisitor);
+    }
+  }
+
+  void _fillFormWithVisitorData(VisitorProfile visitor) {
+    setState(() {
+      _selectedVisitorProfile = visitor;
+      _nameController.text = visitor.name;
+      _phoneController.text = visitor.phoneNumber;
+      _emailController.text = visitor.email ?? '';
+      
+      // Auto-fill company/origin from latest visit if available
+      if (visitor.visits.isNotEmpty) {
+        final latestVisit = visitor.latestVisit;
+        if (latestVisit != null && _originController.text.isEmpty) {
+          _originController.text = latestVisit.origin;
+        }
+      }
+      
+      // Don't fill visit-specific fields like purpose, etc.
+      // as this is a new visit for the same visitor
+    });
+  }
+
+  void _searchVisitorByPhone(String phoneNumber) {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+    
+    // Only search if phone number is valid length
+    if (phoneNumber.length < 10) {
+      return;
+    }
+    
+    // Set up new timer with 1 second delay
+    _debounceTimer = Timer(const Duration(seconds: 1), () {
+      // Only search if not already showing this profile
+      if (_selectedVisitorProfile?.phoneNumber != phoneNumber) {
+        context.read<VisitorProfileBloc>().add(
+          GetVisitorProfileEvent(phoneNumber: phoneNumber),
+        );
+      }
+    });
+  }
+
   void _resetForm() {
     _formKey.currentState?.reset();
     _nameController.clear();
@@ -590,6 +790,7 @@ class _VisitorRegistrationViewState extends State<_VisitorRegistrationView> {
     setState(() {
       _selectedEmployee = null;
       _capturedPhoto = null;
+      _selectedVisitorProfile = null;
     });
   }
 }

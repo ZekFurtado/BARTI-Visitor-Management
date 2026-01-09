@@ -55,6 +55,15 @@ class VisitorPhotoUploaded extends VisitorState {
   List<Object> get props => [photoUrl];
 }
 
+class VisitorProfileRegistered extends VisitorState {
+  final VisitorProfile visitorProfile;
+
+  const VisitorProfileRegistered(this.visitorProfile);
+
+  @override
+  List<Object> get props => [visitorProfile];
+}
+
 class VisitorError extends VisitorState {
   final String message;
 

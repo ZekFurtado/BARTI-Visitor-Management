@@ -2,19 +2,19 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/utils/typedef.dart';
-import '../../domain/entities/dashboard_stats.dart';
-import '../../domain/repositories/dashboard_repository.dart';
-import '../datasources/dashboard_remote_data_source.dart';
+import '../../domain/entities/employee.dart';
+import '../../domain/repositories/employee_repository.dart';
+import '../datasources/employee_remote_data_source.dart';
 
-class DashboardRepositoryImpl implements DashboardRepository {
-  final DashboardRemoteDataSource remoteDataSource;
+class EmployeeRepositoryImpl implements EmployeeRepository {
+  final EmployeeRemoteDataSource remoteDataSource;
 
-  DashboardRepositoryImpl(this.remoteDataSource);
+  EmployeeRepositoryImpl(this.remoteDataSource);
 
   @override
-  ResultFuture<DashboardStats> getGatekeeperStats() async {
+  ResultFuture<List<Employee>> getAllEmployees() async {
     try {
-      final result = await remoteDataSource.getGatekeeperStats();
+      final result = await remoteDataSource.getAllEmployees();
       return Right(result);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
@@ -26,9 +26,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  ResultFuture<DashboardStats> getEmployeeStats(String employeeId) async {
+  ResultFuture<Employee> getEmployeeById(String id) async {
     try {
-      final result = await remoteDataSource.getEmployeeStats(employeeId);
+      final result = await remoteDataSource.getEmployeeById(id);
       return Right(result);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
@@ -40,9 +40,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  ResultFuture<int> getTodayVisitorCount() async {
+  ResultFuture<List<Employee>> searchEmployees(String query) async {
     try {
-      final result = await remoteDataSource.getTodayVisitorCount();
+      final result = await remoteDataSource.searchEmployees(query);
       return Right(result);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
@@ -54,9 +54,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  ResultFuture<int> getPendingApprovalsCount(String employeeId) async {
+  ResultFuture<List<Employee>> getEmployeesByDepartment(String department) async {
     try {
-      final result = await remoteDataSource.getPendingApprovalsCount(employeeId);
+      final result = await remoteDataSource.getEmployeesByDepartment(department);
       return Right(result);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
@@ -65,29 +65,5 @@ class DashboardRepositoryImpl implements DashboardRepository {
     } catch (e) {
       return Left(ServerFailure(message: e.toString(), statusCode: 'unknown'));
     }
-  }
-
-  @override
-  ResultFuture<int> getTotalPendingApprovals() async {
-    try {
-      final result = await remoteDataSource.getTotalPendingApprovals();
-      return Right(result);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(message: e.message, statusCode: e.statusCode));
-    } on ServerException catch (e) {
-      return Left(ServerFailure(message: e.message, statusCode: e.statusCode));
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString(), statusCode: 'unknown'));
-    }
-  }
-
-  @override
-  Stream<DashboardStats> getGatekeeperStatsStream() {
-    return remoteDataSource.getGatekeeperStatsStream();
-  }
-
-  @override
-  Stream<DashboardStats> getEmployeeStatsStream(String employeeId) {
-    return remoteDataSource.getEmployeeStatsStream(employeeId);
   }
 }

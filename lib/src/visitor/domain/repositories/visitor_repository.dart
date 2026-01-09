@@ -1,5 +1,6 @@
 import '../../../../core/utils/typedef.dart';
 import '../entities/visitor.dart';
+import '../entities/visitor_profile.dart';
 
 /// Abstract repository for visitor operations
 abstract class VisitorRepository {
@@ -35,4 +36,22 @@ abstract class VisitorRepository {
 
   /// Get visitor history by phone number
   ResultFuture<List<Visitor>> getVisitorHistoryByPhone(String phoneNumber);
+
+  /// Get visitor profile by phone number
+  ResultFuture<VisitorProfile?> getVisitorProfileByPhone(String phoneNumber);
+
+  /// Create or update visitor profile
+  ResultFuture<VisitorProfile> createOrUpdateVisitorProfile(VisitorProfile visitorProfile);
+
+  /// Add a new visit to existing visitor profile
+  ResultFuture<VisitorProfile> addVisitToProfile(String phoneNumber, Visit visit);
+
+  /// Search visitors by name or phone
+  ResultFuture<List<VisitorProfile>> searchVisitors(String query);
+
+  /// Get real-time stream of visitors for a specific employee
+  Stream<List<Visitor>> getVisitorsForEmployeeStream(String employeeId);
+
+  /// Get real-time stream of visitors by status
+  Stream<List<Visitor>> getVisitorsByStatusStream(VisitorStatus status);
 }

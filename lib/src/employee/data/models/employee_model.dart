@@ -31,16 +31,16 @@ class EmployeeModel extends Employee {
     final data = doc.data()!;
     return EmployeeModel(
       id: doc.id,
-      name: data['name'] as String,
-      email: data['email'] as String,
-      jobRole: data['jobRole'] as String,
-      department: data['department'] as String,
-      phoneNumber: data['phoneNumber'] as String?,
-      profilePictureUrl: data['profilePictureUrl'] as String?,
-      isActive: data['isActive'] as bool? ?? true,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      jobRole: data['jobRole'] as String? ?? '',
+      department: data['department'] as String? ?? '',
+      phoneNumber: data['phone'] as String?, // Note: field name is 'phone' in user collection
+      profilePictureUrl: data['profilePic'] as String?, // Note: field name is 'profilePic' in user collection
+      isActive: true, // All employees in users collection are considered active
       officeLocation: data['officeLocation'] as String?,
-      joinedAt: data['joinedAt'] != null 
-          ? (data['joinedAt'] as Timestamp).toDate() 
+      joinedAt: data['createdOn'] != null 
+          ? DateTime.tryParse(data['createdOn'] as String)
           : null,
     );
   }

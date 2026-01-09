@@ -100,3 +100,57 @@ class UploadVisitorPhotoEvent extends VisitorEvent {
   @override
   List<Object> get props => [visitorId, photoFile];
 }
+
+class SmartRegisterVisitorEvent extends VisitorEvent {
+  final String name;
+  final String origin;
+  final String purpose;
+  final String employeeToMeetId;
+  final String employeeToMeetName;
+  final String gatekeeperId;
+  final String gatekeeperName;
+  final String? phoneNumber;
+  final String? email;
+  final String? expectedDuration;
+  final String? notes;
+  final File? photoFile;
+
+  const SmartRegisterVisitorEvent({
+    required this.name,
+    required this.origin,
+    required this.purpose,
+    required this.employeeToMeetId,
+    required this.employeeToMeetName,
+    required this.gatekeeperId,
+    required this.gatekeeperName,
+    this.phoneNumber,
+    this.email,
+    this.expectedDuration,
+    this.notes,
+    this.photoFile,
+  });
+
+  @override
+  List<Object?> get props => [
+        name,
+        origin,
+        purpose,
+        employeeToMeetId,
+        employeeToMeetName,
+        gatekeeperId,
+        gatekeeperName,
+        phoneNumber,
+        email,
+        expectedDuration,
+        notes,
+        photoFile,
+      ];
+}
+class SubscribeToVisitorsForEmployeeEvent extends VisitorEvent {
+  final String employeeId;
+
+  const SubscribeToVisitorsForEmployeeEvent({required this.employeeId});
+
+  @override
+  List<Object> get props => [employeeId];
+}

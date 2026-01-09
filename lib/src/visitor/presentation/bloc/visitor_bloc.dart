@@ -4,10 +4,14 @@ import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/visitor.dart';
+import '../../domain/entities/visitor_profile.dart';
 import '../../domain/usecases/get_visitors.dart';
+import '../../domain/usecases/get_visitors_stream.dart';
 import '../../domain/usecases/update_visitor_status.dart';
+import '../../domain/usecases/visitor_profile_usecases.dart';
 import '../../../visitor/data/models/visitor_model.dart';
 import '../../../visitor/data/datasources/visitor_remote_data_source.dart';
+import '../../../../core/services/notification_service.dart';
 
 part 'visitor_event.dart';
 part 'visitor_state.dart';
@@ -15,25 +19,36 @@ part 'visitor_state.dart';
 class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
   final GetVisitors _getVisitors;
   final GetVisitorsForEmployee _getVisitorsForEmployee;
+  final GetVisitorsForEmployeeStream _getVisitorsForEmployeeStream;
   final GetVisitorsByStatus _getVisitorsByStatus;
   final UpdateVisitorStatus _updateVisitorStatus;
+  final SmartVisitorRegistration _smartVisitorRegistration;
   final VisitorRemoteDataSource _remoteDataSource;
+  final NotificationService _notificationService;
 
   VisitorBloc({
     required GetVisitors getVisitors,
     required GetVisitorsForEmployee getVisitorsForEmployee,
+    required GetVisitorsForEmployeeStream getVisitorsForEmployeeStream,
     required GetVisitorsByStatus getVisitorsByStatus,
     required UpdateVisitorStatus updateVisitorStatus,
+    required SmartVisitorRegistration smartVisitorRegistration,
     required VisitorRemoteDataSource remoteDataSource,
+    required NotificationService notificationService,
   })  : _getVisitors = getVisitors,
         _getVisitorsForEmployee = getVisitorsForEmployee,
+        _getVisitorsForEmployeeStream = getVisitorsForEmployeeStream,
         _getVisitorsByStatus = getVisitorsByStatus,
         _updateVisitorStatus = updateVisitorStatus,
+        _smartVisitorRegistration = smartVisitorRegistration,
         _remoteDataSource = remoteDataSource,
+        _notificationService = notificationService,
         super(VisitorInitial()) {
     on<RegisterVisitorEvent>(_onRegisterVisitor);
+    on<SmartRegisterVisitorEvent>(_onSmartRegisterVisitor);
     on<GetAllVisitorsEvent>(_onGetAllVisitors);
     on<GetVisitorsForEmployeeEvent>(_onGetVisitorsForEmployee);
+    on<SubscribeToVisitorsForEmployeeEvent>(_onSubscribeToVisitorsForEmployee);
     on<GetVisitorsByStatusEvent>(_onGetVisitorsByStatus);
     on<UpdateVisitorStatusEvent>(_onUpdateVisitorStatus);
     on<UploadVisitorPhotoEvent>(_onUploadVisitorPhoto);
@@ -151,7 +166,46 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
     );
     result.fold(
       (failure) => emit(VisitorError(failure.message)),
-      (visitor) => emit(VisitorStatusUpdated(visitor)),
+      (visitor) async {
+        // Send notification to gatekeeper about status update
+        try {
+          final isApproved = event.status == VisitorStatus.approved;
+          if (isApproved) {
+            await _notificationService.sendVisitorApprovalNotification(
+              gatekeeperId: visitor.gatekeeperId,
+              visitorName: visitor.name,
+              employeeName: visitor.employeeToMeetName,
+              visitorId: visitor.id,
+            );
+            log('✅ Approval notification sent to gatekeeper: ${visitor.gatekeeperName}');
+          } else {
+            await _notificationService.sendVisitorRejectionNotification(
+              gatekeeperId: visitor.gatekeeperId,
+              visitorName: visitor.name,
+              employeeName: visitor.employeeToMeetName,
+              visitorId: visitor.id,
+            );
+            log('✅ Rejection notification sent to gatekeeper: ${visitor.gatekeeperName}');
+          }
+        } catch (e) {
+          log('❌ Failed to send status notification to gatekeeper: $e');
+        }
+        
+        emit(VisitorStatusUpdated(visitor));
+      },
+    );
+  }
+
+  Future<void> _onSubscribeToVisitorsForEmployee(
+    SubscribeToVisitorsForEmployeeEvent event,
+    Emitter<VisitorState> emit,
+  ) async {
+    await emit.forEach(
+      _getVisitorsForEmployeeStream(
+        GetVisitorsForEmployeeStreamParams(employeeId: event.employeeId),
+      ),
+      onData: (visitors) => VisitorsLoaded(visitors),
+      onError: (error, _) => VisitorError(error.toString()),
     );
   }
 
@@ -170,6 +224,108 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
       emit(VisitorPhotoUploaded(photoUrl));
     } catch (e) {
       emit(VisitorError('Failed to upload photo: ${e.toString()}'));
+    }
+  }
+
+  Future<void> _onSmartRegisterVisitor(
+    SmartRegisterVisitorEvent event,
+    Emitter<VisitorState> emit,
+  ) async {
+    emit(VisitorLoading());
+    
+    try {
+      // Create visitor entity from the event data
+      final visitor = Visitor(
+        name: event.name,
+        origin: event.origin,
+        purpose: event.purpose,
+        employeeToMeetId: event.employeeToMeetId,
+        employeeToMeetName: event.employeeToMeetName,
+        gatekeeperId: event.gatekeeperId,
+        gatekeeperName: event.gatekeeperName,
+        phoneNumber: event.phoneNumber,
+        email: event.email,
+        expectedDuration: event.expectedDuration,
+        notes: event.notes,
+        status: VisitorStatus.pending,
+        createdAt: DateTime.now(),
+      );
+
+      // Use smart registration to handle visitor profiles
+      final result = await _smartVisitorRegistration(
+        SmartVisitorRegistrationParams(visitor: visitor),
+      );
+
+      await result.fold(
+        (failure) async => emit(VisitorError(failure.message)),
+        (visitorProfile) async {
+          // Check if emitter is still active
+          if (emit.isDone) return;
+          
+          // Upload photo if provided
+          if (event.photoFile != null && visitorProfile.id != null) {
+            _uploadPhotoForProfile(visitorProfile.id!, event.photoFile!);
+          }
+          
+          // Send notification to employee
+          try {
+            log('🔔 Attempting to send notification to employee: ${event.employeeToMeetId}');
+            
+            // Debug notification system first
+            await _notificationService.debugNotificationSystem(event.employeeToMeetId);
+            
+            // Get the latest visit ID safely
+            String? latestVisitId;
+            if (visitorProfile.visits.isNotEmpty) {
+              final sortedVisits = visitorProfile.visits.toList()
+                ..sort((a, b) => b.visitDate.compareTo(a.visitDate));
+              latestVisitId = sortedVisits.first.id;
+            }
+            
+            final notificationSent = await _notificationService.sendVisitorNotification(
+              employeeId: event.employeeToMeetId,
+              visitorName: event.name,
+              visitorOrigin: event.origin,
+              visitorPurpose: event.purpose,
+              gatekeeperName: event.gatekeeperName,
+              visitorId: latestVisitId,
+            );
+            
+            if (notificationSent) {
+              log('✅ Visitor notification sent successfully to employee: ${event.employeeToMeetName}');
+            } else {
+              log('❌ Failed to send visitor notification to employee: ${event.employeeToMeetName}');
+              log('❌ This usually means FCM token not found, service account misconfigured, or network issue');
+            }
+          } catch (e) {
+            log('❌ Exception sending visitor notification: $e');
+            log('❌ Stack trace: ${StackTrace.current}');
+            // Don't fail the registration if notification fails
+          }
+          
+          // Check again before emitting
+          if (!emit.isDone) {
+            emit(VisitorProfileRegistered(visitorProfile));
+          }
+        },
+      );
+    } catch (e) {
+      log('Error in smart visitor registration: $e');
+      emit(VisitorError('Failed to register visitor: ${e.toString()}'));
+    }
+  }
+
+  void _uploadPhotoForProfile(String profileId, File photoFile) async {
+    try {
+      final photoUrl = await _remoteDataSource.uploadVisitorPhoto(
+        profileId,
+        photoFile,
+      );
+      
+      // TODO: Update visitor profile with photo URL
+      log('Photo uploaded successfully: $photoUrl');
+    } catch (e) {
+      log('Failed to upload photo: $e');
     }
   }
 }

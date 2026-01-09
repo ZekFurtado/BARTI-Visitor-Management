@@ -27,3 +27,18 @@ class GetEmployeeStatsEvent extends DashboardEvent {
 class RefreshStatsEvent extends DashboardEvent {
   const RefreshStatsEvent();
 }
+
+/// Event to subscribe to gatekeeper stats stream
+class SubscribeToGatekeeperStatsEvent extends DashboardEvent {
+  const SubscribeToGatekeeperStatsEvent();
+}
+
+/// Event to subscribe to employee stats stream
+class SubscribeToEmployeeStatsEvent extends DashboardEvent {
+  final String employeeId;
+
+  const SubscribeToEmployeeStatsEvent({required this.employeeId});
+
+  @override
+  List<Object> get props => [employeeId];
+}

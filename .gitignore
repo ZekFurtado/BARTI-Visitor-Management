@@ -48,3 +48,6 @@ app.*.map.json
 /.claude/
 /specs/
 /lib/core/utils/firebase_options.dart
+
+# Firebase Service Account (contains sensitive credentials)
+/assets/config/service_account.json

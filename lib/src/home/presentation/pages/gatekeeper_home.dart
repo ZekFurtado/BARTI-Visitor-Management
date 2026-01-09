@@ -21,8 +21,8 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
   @override
   void initState() {
     super.initState();
-    // Fetch dashboard statistics on initialization
-    context.read<DashboardBloc>().add(const GetGatekeeperStatsEvent());
+    // Subscribe to real-time dashboard statistics
+    context.read<DashboardBloc>().add(const SubscribeToGatekeeperStatsEvent());
   }
 
   @override
@@ -36,8 +36,7 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
           IconButton(
             icon: Icon(Icons.notifications),
             onPressed: () {
-              // Navigate to notifications
-              log('Navigate to notifications');
+              Navigator.of(context).pushNamed(Routes.notifications, arguments: widget.user);
             },
           ),
           PopupMenuButton<String>(
@@ -227,7 +226,7 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
                         icon: const Icon(Icons.refresh),
                         label: const Text('Retry'),
                         onPressed: () => context.read<DashboardBloc>().add(
-                          const GetGatekeeperStatsEvent(),
+                          const SubscribeToGatekeeperStatsEvent(),
                         ),
                       ),
                     ],
@@ -336,8 +335,7 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
               'View visitors waiting for approval',
               Icons.pending_actions,
               () {
-                log('Navigate to pending approvals');
-                // TODO: Navigate to pending approvals screen
+                Navigator.of(context).pushNamed(Routes.pendingVisitors, arguments: widget.user);
               },
             ),
           ],

@@ -6,6 +6,8 @@ import 'package:visitor_management/src/authentication/presentation/pages/splash_
 import 'package:visitor_management/src/home/presentation/pages/home_router.dart';
 import 'package:visitor_management/src/visitor/presentation/pages/visitor_registration.dart';
 import 'package:visitor_management/src/visitor/presentation/pages/visitor_history_screen.dart';
+import 'package:visitor_management/src/visitor/presentation/pages/pending_visitors_screen.dart';
+import 'package:visitor_management/src/notifications/presentation/pages/notifications_screen.dart';
 
 class Routes {
   static const String splash = '/';
@@ -14,6 +16,8 @@ class Routes {
   static const String home = '/home';
   static const String visitorRegistration = '/visitor_registration';
   static const String visitorHistory = '/visitor_history';
+  static const String pendingVisitors = '/pending_visitors';
+  static const String notifications = '/notifications';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -59,6 +63,34 @@ class Routes {
               userRole: args['userRole'] as String,
               userId: args['userId'] as String,
             ),
+            settings: settings,
+          );
+        } else {
+          return MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+            settings: const RouteSettings(name: login),
+          );
+        }
+
+      case pendingVisitors:
+        final user = settings.arguments as LocalUser?;
+        if (user != null) {
+          return MaterialPageRoute(
+            builder: (context) => PendingVisitorsScreen(user: user),
+            settings: settings,
+          );
+        } else {
+          return MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+            settings: const RouteSettings(name: login),
+          );
+        }
+
+      case notifications:
+        final user = settings.arguments as LocalUser?;
+        if (user != null) {
+          return MaterialPageRoute(
+            builder: (context) => NotificationsScreen(user: user),
             settings: settings,
           );
         } else {

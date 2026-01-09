@@ -17,4 +17,10 @@ abstract class DashboardRepository {
 
   /// Get total pending approvals (for gatekeeper view)
   ResultFuture<int> getTotalPendingApprovals();
+
+  /// Get real-time dashboard statistics for gatekeeper
+  Stream<DashboardStats> getGatekeeperStatsStream();
+
+  /// Get real-time dashboard statistics for employee
+  Stream<DashboardStats> getEmployeeStatsStream(String employeeId);
 }

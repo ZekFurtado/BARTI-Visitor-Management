@@ -14,3 +14,10 @@ abstract class UseCaseWithoutParams<Type> {
 
   ResultFuture<Type> call();
 }
+
+/// Generic class for stream use cases with parameters
+abstract class StreamUsecase<Type, Params> {
+  const StreamUsecase();
+
+  Stream<Type> call(Params params);
+}

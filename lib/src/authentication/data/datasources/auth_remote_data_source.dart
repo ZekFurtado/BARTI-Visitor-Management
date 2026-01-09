@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:visitor_management/core/errors/exceptions.dart';
+import 'package:visitor_management/core/services/notification_service.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -82,9 +83,13 @@ abstract class AuthRemoteDataSource {
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth firebaseAuth;
   final GoogleSignIn googleSignIn;
+  final NotificationService _notificationService;
 
-
-  AuthRemoteDataSourceImpl(this.firebaseAuth, this.googleSignIn);
+  AuthRemoteDataSourceImpl(
+    this.firebaseAuth, 
+    this.googleSignIn,
+    this._notificationService,
+  );
 
   /// This method is automatically called due to the dependency injection at
   /// runtime. It calls the Firebase API for signing in the user and then
@@ -104,6 +109,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             if (firebaseUser.uid != null) {
               try {
                 final userDataFromFirestore = await getUserDataFromFirestore(uid: firebaseUser.uid!);
+                
+                // Store FCM token after successful sign in
+                await _storeFCMToken(firebaseUser.uid!);
+                
                 // Merge Firebase auth data with Firestore user data
                 return firebaseUser.copyWith(
                   role: userDataFromFirestore.role,
@@ -116,6 +125,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               } catch (e) {
                 // If Firestore data doesn't exist, return Firebase user data only
                 // This handles cases where user registered but Firestore data wasn't created
+                await _storeFCMToken(firebaseUser.uid!);
                 return firebaseUser;
               }
             }
@@ -194,8 +204,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final UserCredential userCredential = await firebaseAuth
           .signInWithCredential(credential);
 
-      // Create and return VisitorModel
-      return LocalUserModel.fromFirebase(userCredential.user);
+      // Create user model and store FCM token
+      final localUser = LocalUserModel.fromFirebase(userCredential.user);
+      
+      if (localUser.uid != null) {
+        await _storeFCMToken(localUser.uid!);
+      }
+      
+      return localUser;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'account-exists-with-different-credential') {
         throw AuthException(
@@ -332,6 +348,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       final firebaseUser = LocalUserModel.fromFirebase(user);
+      
+      // Store FCM token for session user
+      await _storeFCMToken(firebaseUser.uid!);
       
       // Fetch additional user data from Firestore
       try {
@@ -658,6 +677,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       };
       
       await firestore.collection('users').doc(uid).set(userData);
+      
+      // Store FCM token for new user
+      await _storeFCMToken(uid);
+      
     } on FirebaseException catch (e) {
       throw AuthException(
         statusCode: e.code,
@@ -673,6 +696,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         statusCode: "404",
         message: "No Internet. Please check your network connection",
       );
+    }
+  }
+  
+  /// Store FCM token for a user
+  Future<void> _storeFCMToken(String uid) async {
+    try {
+      final fcmToken = await _notificationService.getToken();
+      if (fcmToken != null) {
+        await _notificationService.storeFCMToken(uid, fcmToken);
+      }
+    } catch (e) {
+      // Don't throw error for FCM token storage failure
+      // as it's not critical for authentication flow
+      print('Warning: Failed to store FCM token: $e');
     }
   }
 }

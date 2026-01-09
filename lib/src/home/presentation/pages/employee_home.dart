@@ -4,29 +4,59 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:visitor_management/src/authentication/domain/entities/user.dart';
 import 'package:visitor_management/src/authentication/presentation/bloc/authentication_bloc.dart';
+import 'package:visitor_management/src/visitor/presentation/bloc/visitor_bloc.dart';
+import 'package:visitor_management/src/visitor/domain/entities/visitor.dart';
+import 'package:visitor_management/src/dashboard/presentation/bloc/dashboard_bloc.dart';
 
 import '../../../../core/utils/routes.dart';
 
-class EmployeeHome extends StatelessWidget {
+class EmployeeHome extends StatefulWidget {
   const EmployeeHome({super.key, required this.user});
 
   final LocalUser user;
+
+  @override
+  State<EmployeeHome> createState() => _EmployeeHomeState();
+}
+
+class _EmployeeHomeState extends State<EmployeeHome> {
+
+  @override
+  void initState() {
+    super.initState();
+    // Subscribe to real-time visitor updates for this employee
+    context.read<VisitorBloc>().add(
+      SubscribeToVisitorsForEmployeeEvent(
+        employeeId: widget.user.uid ?? '',
+      ),
+    );
+
+    // Subscribe to real-time dashboard statistics for this employee
+    context.read<DashboardBloc>().add(
+      SubscribeToEmployeeStatsEvent(employeeId: widget.user.uid ?? ''),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('BARTI - Employee'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        backgroundColor: Theme
+            .of(context)
+            .colorScheme
+            .primary,
+        foregroundColor: Theme
+            .of(context)
+            .colorScheme
+            .onPrimary,
         actions: [
           Stack(
             children: [
               IconButton(
                 icon: Icon(Icons.notifications),
                 onPressed: () {
-                  log('Navigate to notifications');
-                  // TODO: Navigate to notifications screen
+                  Navigator.of(context).pushNamed(Routes.notifications, arguments: widget.user);
                 },
               ),
               // Notification badge
@@ -65,11 +95,12 @@ class EmployeeHome extends StatelessWidget {
                 context.read<AuthenticationBloc>().add(SignOutUserEvent());
                 Navigator.of(context).pushNamedAndRemoveUntil(
                   Routes.login,
-                  (route) => false,
+                      (route) => false,
                 );
               }
             },
-            itemBuilder: (BuildContext context) => [
+            itemBuilder: (BuildContext context) =>
+            [
               PopupMenuItem<String>(
                 value: 'profile',
                 child: Row(
@@ -99,198 +130,449 @@ class EmployeeHome extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          // Welcome Card
+          Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme
+                    .of(context)
+                    .colorScheme
+                    .primary,
+                Theme
+                    .of(context)
+                    .colorScheme
+                    .primary
+                    .withOpacity(0.8),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Welcome back, ${widget.user.name ?? 'Employee'}!',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .headlineSmall
+                    ?.copyWith(
+                  color: Theme
+                      .of(context)
+                      .colorScheme
+                      .onPrimary,
+                  fontWeight: FontWeight.bold,
                 ),
-                borderRadius: BorderRadius.circular(16),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 8),
+              Text(
+                'You have visitor requests to review',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(
+                  color: Theme
+                      .of(context)
+                      .colorScheme
+                      .onPrimary
+                      .withOpacity(0.9),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
                 children: [
-                  Text(
-                    'Welcome back, ${user.name ?? 'Employee'}!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  Icon(
+                    Icons.work_outline,
+                    color: Theme
+                        .of(context)
+                        .colorScheme
+                        .onPrimary,
+                    size: 20,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'You have visitor requests to review',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
+                    '${widget.user.jobRole ?? 'Employee'} • ${widget.user
+                        .department ?? 'Department'}',
+                    style: Theme
+                        .of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(
+                      color: Theme
+                          .of(context)
+                          .colorScheme
+                          .onPrimary
+                          .withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.work_outline,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${user.jobRole ?? 'Employee'} • ${user.department ?? 'Department'}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.9),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Pending Visitors Section
+        Text(
+          'Pending Visitor Requests',
+          style: Theme
+              .of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Real pending visitor cards from Firestore (real-time updates)
+        BlocBuilder<VisitorBloc, VisitorState>(
+            builder: (context, state) {
+              if (state is VisitorLoading) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
+              if (state is VisitorsLoaded) {
+                final pendingVisitors = state.visitors.where(
+                      (visitor) => visitor.status == VisitorStatus.pending,
+                ).toList();
+
+                if (pendingVisitors.isEmpty) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 48,
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No pending visitor requests',
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'You\'ll see new visitor requests here when they arrive.',
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                              color: Theme
+                                  .of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: pendingVisitors
+                      .take(5) // Show only first 5 pending visitors
+                      .map((visitor) =>
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: _buildPendingVisitorCard(
+                          context,
+                          visitor,
+                              () => _handleVisitorAction(visitor),
+                        ),
+                      ))
+                      .toList(),
+                );
+              }
+
+              if (state is VisitorError) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading visitor requests',
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.message,
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () =>
+                              context.read<VisitorBloc>().add(
+                                GetVisitorsForEmployeeEvent(
+                                  employeeId: widget.user.uid ?? '',
+                                ),
+                              ),
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
+          ),
+
+          const SizedBox(height: 24),
+
+          // Quick Stats
+          Text(
+            'Today\'s Statistics',
+            style: Theme
+                .of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(
+              fontWeight: FontWeight.bold,
             ),
+          ),
+          const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
+          BlocBuilder<DashboardBloc, DashboardState>(
+            builder: (context, state) {
+              if (state is DashboardLoaded) {
+                final stats = state.stats;
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        'Pending',
+                        stats.pendingApprovals.toString(),
+                        Icons.pending_outlined,
+                        Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        'Approved',
+                        stats.approvedToday.toString(),
+                        Icons.check_circle_outline,
+                        Colors.green,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildStatCard(
+                        context,
+                        'Rejected',
+                        stats.rejectedToday.toString(),
+                        Icons.cancel_outlined,
+                        Colors.red,
+                      ),
+                    ),
+                  ],
+                );
+              }
 
-            // Pending Visitors Section
-            Text(
-              'Pending Visitor Requests',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              // Show loading or default stats
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Pending',
+                      '--',
+                      Icons.pending_outlined,
+                      Colors.orange,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Approved',
+                      '--',
+                      Icons.check_circle_outline,
+                      Colors.green,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildStatCard(
+                      context,
+                      'Rejected',
+                      '--',
+                      Icons.cancel_outlined,
+                      Colors.red,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+
+          // Recent Activity
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Activity',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // Pending visitor cards
-            _buildPendingVisitorCard(
-              context,
-              'John Smith',
-              'ABC Corporation',
-              'Business meeting regarding partnership',
-              'assets/placeholder_avatar.png', // Placeholder
-              () {
-                log('View John Smith visitor details');
-              },
-            ),
-
-            const SizedBox(height: 12),
-
-            _buildPendingVisitorCard(
-              context,
-              'Sarah Johnson',
-              'Tech Solutions Ltd',
-              'Software demonstration and consultation',
-              'assets/placeholder_avatar.png', // Placeholder
-              () {
-                log('View Sarah Johnson visitor details');
-              },
-            ),
-
-            const SizedBox(height: 24),
-
-            // Quick Stats
-            Text(
-              'Today\'s Statistics',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              TextButton.icon(
+                onPressed: () {
+                  log('Navigate to visitor history');
+                  Navigator.of(context).pushNamed(
+                      Routes.visitorHistory, arguments: {
+                    'userRole': 'employee',
+                    'userId': widget.user.uid,
+                  });
+                },
+                icon: const Icon(Icons.history, size: 18),
+                label: const Text('View History'),
               ),
-            ),
-            const SizedBox(height: 16),
+            ],
+          ),
+          const SizedBox(height: 16),
 
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Pending',
-                    '2',
-                    Icons.pending_outlined,
-                    Colors.orange,
+          // Recent activity - show recent approved/rejected visitors
+          BlocBuilder<VisitorBloc, VisitorState>(
+            builder: (context, state) {
+              if (state is VisitorsLoaded) {
+                final recentActivity = state.visitors
+                    .where((visitor) =>
+                visitor.status == VisitorStatus.approved ||
+                    visitor.status == VisitorStatus.rejected)
+                    .take(3)
+                    .toList();
+
+                if (recentActivity.isEmpty) {
+                  return Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      'No recent activity',
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                        color: Theme
+                            .of(context)
+                            .colorScheme
+                            .onSurfaceVariant,
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: recentActivity.map((visitor) {
+                    final isApproved = visitor.status == VisitorStatus.approved;
+                    final timeAgo = _getTimeAgo(
+                        visitor.updatedAt ?? visitor.createdAt);
+
+                    return _buildActivityItem(
+                      context,
+                      '${isApproved
+                          ? 'Approved'
+                          : 'Rejected'} visitor: ${visitor.name}',
+                      timeAgo,
+                      isApproved ? Icons.check_circle : Icons.cancel,
+                      isApproved ? Colors.green : Colors.red,
+                    );
+                  }).toList(),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Loading recent activity...',
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(
+                    color: Theme
+                        .of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Approved',
-                    '5',
-                    Icons.check_circle_outline,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Rejected',
-                    '1',
-                    Icons.cancel_outlined,
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Recent Activity
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Recent Activity',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    log('Navigate to visitor history');
-                    Navigator.of(context).pushNamed(Routes.visitorHistory, arguments: {
-                      'userRole': 'employee',
-                      'userId': user.uid,
-                    });
-                  },
-                  icon: const Icon(Icons.history, size: 18),
-                  label: const Text('View History'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            _buildActivityItem(
-              context,
-              'Approved visitor: Mike Brown',
-              '2 hours ago',
-              Icons.check_circle,
-              Colors.green,
-            ),
-
-            _buildActivityItem(
-              context,
-              'Rejected visitor: Jane Doe',
-              '4 hours ago',
-              Icons.cancel,
-              Colors.red,
-            ),
-
-            _buildActivityItem(
-              context,
-              'Approved visitor: Robert Wilson',
-              'Yesterday',
-              Icons.check_circle,
-              Colors.green,
-            ),
+              );
+            },
+          ),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        selectedItemColor: Theme
+            .of(context)
+            .colorScheme
+            .primary,
+        unselectedItemColor: Theme
+            .of(context)
+            .colorScheme
+            .onSurfaceVariant,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -312,13 +594,13 @@ class EmployeeHome extends StatelessWidget {
         onTap: (index) {
           switch (index) {
             case 0:
-              // Already on home
+            // Already on home
               break;
             case 1:
-              log('Navigate to pending visitors');
+              Navigator.of(context).pushNamed(Routes.pendingVisitors, arguments: widget.user);
               break;
             case 2:
-              log('Navigate to notifications');
+              Navigator.of(context).pushNamed(Routes.notifications, arguments: widget.user);
               break;
             case 3:
               log('Navigate to profile');
@@ -329,14 +611,107 @@ class EmployeeHome extends StatelessWidget {
     );
   }
 
-  Widget _buildPendingVisitorCard(
-    BuildContext context,
-    String visitorName,
-    String company,
-    String purpose,
-    String photoUrl,
-    VoidCallback onTap,
-  ) {
+  void _handleVisitorAction(Visitor visitor) {
+    showDialog(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: Text('Visitor Request'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Name: ${visitor.name}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text('From: ${visitor.origin}'),
+                const SizedBox(height: 8),
+                Text('Purpose: ${visitor.purpose}'),
+                if (visitor.expectedDuration != null) ...[
+                  const SizedBox(height: 8),
+                  Text('Duration: ${visitor.expectedDuration}'),
+                ],
+                if (visitor.notes?.isNotEmpty == true) ...[
+                  const SizedBox(height: 8),
+                  Text('Notes: ${visitor.notes}'),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  _updateVisitorStatus(visitor, VisitorStatus.rejected);
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Reject'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _updateVisitorStatus(visitor, VisitorStatus.approved);
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Approve'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _updateVisitorStatus(Visitor visitor, VisitorStatus status) {
+    context.read<VisitorBloc>().add(
+      UpdateVisitorStatusEvent(
+        visitorId: visitor.id ?? '',
+        status: status,
+      ),
+    );
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Visitor ${status == VisitorStatus.approved
+              ? 'approved'
+              : 'rejected'} successfully',
+        ),
+        backgroundColor: status == VisitorStatus.approved
+            ? Colors.green
+            : Colors.red,
+      ),
+    );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return difference.inDays == 1 ? 'Yesterday' : '${difference
+          .inDays} days ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours == 1
+          ? ''
+          : 's'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes == 1
+          ? ''
+          : 's'} ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  Widget _buildPendingVisitorCard(BuildContext context,
+      Visitor visitor,
+      VoidCallback onTap,) {
     return Card(
       elevation: 2,
       child: InkWell(
@@ -351,15 +726,27 @@ class EmployeeHome extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    child: Text(
-                      visitorName.substring(0, 1).toUpperCase(),
+                    backgroundColor: Theme
+                        .of(context)
+                        .colorScheme
+                        .primary
+                        .withOpacity(0.1),
+                    backgroundImage: visitor.photoUrl != null
+                        ? NetworkImage(visitor.photoUrl!)
+                        : null,
+                    child: visitor.photoUrl == null
+                        ? Text(
+                      visitor.name.substring(0, 1).toUpperCase(),
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme
+                            .of(context)
+                            .colorScheme
+                            .primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
-                    ),
+                    )
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -367,22 +754,34 @@ class EmployeeHome extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          visitorName,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          visitor.name,
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          company,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          visitor.origin,
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -400,17 +799,35 @@ class EmployeeHome extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Purpose: $purpose',
-                style: Theme.of(context).textTheme.bodyMedium,
+                'Purpose: ${visitor.purpose}',
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyMedium,
               ),
+              if (visitor.expectedDuration != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'Duration: ${visitor.expectedDuration}',
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(
+                    color: Theme
+                        .of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () {
-                        log('Reject visitor: $visitorName');
-                        // TODO: Implement reject functionality
+                        _updateVisitorStatus(visitor, VisitorStatus.rejected);
                       },
                       icon: Icon(Icons.close, size: 18),
                       label: Text('Reject'),
@@ -424,8 +841,7 @@ class EmployeeHome extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        log('Approve visitor: $visitorName');
-                        // TODO: Implement approve functionality
+                        _updateVisitorStatus(visitor, VisitorStatus.approved);
                       },
                       icon: Icon(Icons.check, size: 18),
                       label: Text('Approve'),
@@ -444,24 +860,33 @@ class EmployeeHome extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildStatCard(BuildContext context,
+      String title,
+      String value,
+      IconData icon,
+      Color color,) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme
+            .of(context)
+            .colorScheme
+            .surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
+          color: Theme
+              .of(context)
+              .colorScheme
+              .outline
+              .withOpacity(0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+            color: Theme
+                .of(context)
+                .colorScheme
+                .shadow
+                .withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -484,7 +909,11 @@ class EmployeeHome extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            style: Theme
+                .of(context)
+                .textTheme
+                .headlineSmall
+                ?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -492,8 +921,15 @@ class EmployeeHome extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: Theme
+                .of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(
+              color: Theme
+                  .of(context)
+                  .colorScheme
+                  .onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -502,13 +938,11 @@ class EmployeeHome extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityItem(
-    BuildContext context,
-    String title,
-    String time,
-    IconData icon,
-    Color color,
-  ) {
+  Widget _buildActivityItem(BuildContext context,
+      String title,
+      String time,
+      IconData icon,
+      Color color,) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -532,14 +966,25 @@ class EmployeeHome extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
                   time,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(
+                    color: Theme
+                        .of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
                   ),
                 ),
               ],
