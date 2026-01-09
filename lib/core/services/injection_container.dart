@@ -37,6 +37,8 @@ import 'package:visitor_management/src/dashboard/domain/repositories/dashboard_r
 import 'package:visitor_management/src/dashboard/domain/usecases/get_dashboard_stats.dart';
 import 'package:visitor_management/src/dashboard/domain/usecases/get_dashboard_stats_stream.dart';
 import 'package:visitor_management/src/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:visitor_management/src/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:visitor_management/src/notifications/presentation/bloc/notifications_bloc.dart';
 import 'notification_service.dart';
 
 final sl = GetIt.instance;
@@ -100,6 +102,12 @@ Future<void> init() async {
         getEmployeeStats: sl(),
         getGatekeeperStatsStream: sl(),
         getEmployeeStatsStream: sl(),
+      ),
+    )
+    /// Notifications
+    ..registerFactory(
+      () => NotificationsBloc(
+        dataSource: sl(),
       ),
     )
     /// USE CASES
@@ -178,6 +186,12 @@ Future<void> init() async {
     /// Dashboard Statistics
     ..registerLazySingleton<DashboardRemoteDataSource>(
       () => DashboardRemoteDataSourceImpl(
+        firestore: sl(),
+      ),
+    )
+    /// Notifications
+    ..registerLazySingleton<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSourceImpl(
         firestore: sl(),
       ),
     )

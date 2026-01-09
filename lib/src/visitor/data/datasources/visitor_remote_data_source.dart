@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -928,41 +929,60 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   @override
   Stream<List<VisitorModel>> getVisitorsForEmployeeStream(String employeeId) {
     try {
+      log('🔥 Setting up Firestore stream for employee: $employeeId from visitor_profiles collection');
       return firestore
           .collection('visitor_profiles')
-          .where('visits', arrayContainsAny: [
-            {'employeeToMeetId': employeeId}
-          ])
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .expand((doc) {
+          .map((snapshot) {
+            log('🔥 Firestore snapshot received: ${snapshot.docs.length} visitor profiles');
+            
+            final visitorModels = <VisitorModel>[];
+            
+            for (final doc in snapshot.docs) {
+              try {
                 final profile = VisitorProfileModel.fromFirestore(doc);
-                return profile.visits
-                    .where((visit) => visit.employeeToMeetId == employeeId)
-                    .map((visit) => VisitorModel(
-                          id: visit.id,
-                          name: profile.name,
-                          origin: visit.origin,
-                          purpose: visit.purpose,
-                          employeeToMeetId: visit.employeeToMeetId,
-                          employeeToMeetName: visit.employeeToMeetName,
-                          status: visit.status,
-                          gatekeeperId: visit.gatekeeperId,
-                          gatekeeperName: visit.gatekeeperName,
-                          phoneNumber: profile.phoneNumber,
-                          email: profile.email,
-                          photoUrl: profile.photoUrl,
-                          expectedDuration: visit.expectedDuration,
-                          notes: visit.notes,
-                          createdAt: visit.visitDate,
-                          updatedAt: visit.updatedAt,
-                        ));
-              })
-              .toList());
+                
+                // Filter visits for this specific employee and convert to VisitorModel
+                for (final visit in profile.visits) {
+                  if (visit.employeeToMeetId == employeeId) {
+                    final visitorModel = VisitorModel(
+                      id: visit.id,
+                      name: profile.name,
+                      origin: visit.origin,
+                      purpose: visit.purpose,
+                      employeeToMeetId: visit.employeeToMeetId,
+                      employeeToMeetName: visit.employeeToMeetName,
+                      gatekeeperId: visit.gatekeeperId,
+                      gatekeeperName: visit.gatekeeperName,
+                      phoneNumber: profile.phoneNumber,
+                      email: profile.email,
+                      expectedDuration: visit.expectedDuration,
+                      notes: visit.notes,
+                      status: visit.status,
+                      createdAt: visit.visitDate,
+                      updatedAt: visit.updatedAt,
+                      photoUrl: profile.photoUrl,
+                    );
+                    visitorModels.add(visitorModel);
+                    log('🔥 Added visitor: ${profile.name} | Employee: ${visit.employeeToMeetId} | Status: ${visit.status}');
+                  }
+                }
+              } catch (e) {
+                log('❌ Error processing profile doc ${doc.id}: $e');
+              }
+            }
+            
+            // Sort by visit date (most recent first)
+            visitorModels.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            log('🔥 Returning ${visitorModels.length} visitors for employee $employeeId');
+            
+            return visitorModels;
+          });
     } catch (e) {
+      log('❌ Error setting up visitor stream for employee $employeeId: $e');
       throw ServerException(
         statusCode: 'unknown',
-        message: 'Failed to get visitor stream: $e',
+        message: 'Failed to get visitor stream for employee: $e',
       );
     }
   }
@@ -970,35 +990,57 @@ class VisitorRemoteDataSourceImpl implements VisitorRemoteDataSource {
   @override
   Stream<List<VisitorModel>> getVisitorsByStatusStream(VisitorStatus status) {
     try {
+      log('🔥 Setting up Firestore stream for status: $status from visitor_profiles collection');
       return firestore
           .collection('visitor_profiles')
           .snapshots()
-          .map((snapshot) => snapshot.docs
-              .expand((doc) {
+          .map((snapshot) {
+            log('🔥 Firestore snapshot received: ${snapshot.docs.length} visitor profiles for status $status');
+            
+            final visitorModels = <VisitorModel>[];
+            
+            for (final doc in snapshot.docs) {
+              try {
                 final profile = VisitorProfileModel.fromFirestore(doc);
-                return profile.visits
-                    .where((visit) => visit.status == status)
-                    .map((visit) => VisitorModel(
-                          id: visit.id,
-                          name: profile.name,
-                          origin: visit.origin,
-                          purpose: visit.purpose,
-                          employeeToMeetId: visit.employeeToMeetId,
-                          employeeToMeetName: visit.employeeToMeetName,
-                          status: visit.status,
-                          gatekeeperId: visit.gatekeeperId,
-                          gatekeeperName: visit.gatekeeperName,
-                          phoneNumber: profile.phoneNumber,
-                          email: profile.email,
-                          photoUrl: profile.photoUrl,
-                          expectedDuration: visit.expectedDuration,
-                          notes: visit.notes,
-                          createdAt: visit.visitDate,
-                          updatedAt: visit.updatedAt,
-                        ));
-              })
-              .toList());
+                
+                // Filter visits by status and convert to VisitorModel
+                for (final visit in profile.visits) {
+                  if (visit.status == status) {
+                    final visitorModel = VisitorModel(
+                      id: visit.id,
+                      name: profile.name,
+                      origin: visit.origin,
+                      purpose: visit.purpose,
+                      employeeToMeetId: visit.employeeToMeetId,
+                      employeeToMeetName: visit.employeeToMeetName,
+                      gatekeeperId: visit.gatekeeperId,
+                      gatekeeperName: visit.gatekeeperName,
+                      phoneNumber: profile.phoneNumber,
+                      email: profile.email,
+                      expectedDuration: visit.expectedDuration,
+                      notes: visit.notes,
+                      status: visit.status,
+                      createdAt: visit.visitDate,
+                      updatedAt: visit.updatedAt,
+                      photoUrl: profile.photoUrl,
+                    );
+                    visitorModels.add(visitorModel);
+                    log('🔥 Added visitor with status $status: ${profile.name}');
+                  }
+                }
+              } catch (e) {
+                log('❌ Error processing profile doc ${doc.id}: $e');
+              }
+            }
+            
+            // Sort by visit date (most recent first)
+            visitorModels.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+            log('🔥 Returning ${visitorModels.length} visitors with status $status');
+            
+            return visitorModels;
+          });
     } catch (e) {
+      log('❌ Error setting up visitor stream for status $status: $e');
       throw ServerException(
         statusCode: 'unknown',
         message: 'Failed to get visitor stream by status: $e',

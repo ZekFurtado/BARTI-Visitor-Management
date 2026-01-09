@@ -20,21 +20,29 @@ class EmployeeHome extends StatefulWidget {
 }
 
 class _EmployeeHomeState extends State<EmployeeHome> {
+  // Cache the last known visitors to prevent flash on state changes
+  List<Visitor> _lastKnownVisitors = [];
 
   @override
   void initState() {
     super.initState();
-    // Subscribe to real-time visitor updates for this employee
-    context.read<VisitorBloc>().add(
-      SubscribeToVisitorsForEmployeeEvent(
-        employeeId: widget.user.uid ?? '',
-      ),
-    );
+    // Initialize with real-time stream only to avoid state conflicts
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      log('🔄 Setting up real-time stream for employee: ${widget.user.uid}');
+      
+      // Only use the stream subscription - no initial one-time load
+      // This prevents the "flash then disappear" issue
+      context.read<VisitorBloc>().add(
+        SubscribeToVisitorsForEmployeeEvent(
+          employeeId: widget.user.uid ?? '',
+        ),
+      );
 
-    // Subscribe to real-time dashboard statistics for this employee
-    context.read<DashboardBloc>().add(
-      SubscribeToEmployeeStatsEvent(employeeId: widget.user.uid ?? ''),
-    );
+      // Subscribe to real-time dashboard statistics for this employee  
+      context.read<DashboardBloc>().add(
+        SubscribeToEmployeeStatsEvent(employeeId: widget.user.uid ?? ''),
+      );
+    });
   }
 
   @override
@@ -234,88 +242,36 @@ class _EmployeeHomeState extends State<EmployeeHome> {
         const SizedBox(height: 16),
 
         // Real pending visitor cards from Firestore (real-time updates)
-        BlocBuilder<VisitorBloc, VisitorState>(
+        BlocListener<VisitorBloc, VisitorState>(
+          listener: (context, state) {
+            // Update cached visitors when we get new data
+            if (state is VisitorsLoaded) {
+              setState(() {
+                _lastKnownVisitors = state.visitors;
+              });
+              log('🔄 Updated cached visitors: ${_lastKnownVisitors.length} visitors');
+            }
+          },
+          child: BlocBuilder<VisitorBloc, VisitorState>(
             builder: (context, state) {
-              if (state is VisitorLoading) {
+              log('🔍 Current VisitorBloc state: ${state.runtimeType}');
+              
+              // Use cached visitors if available, otherwise use current state
+              List<Visitor> visitorsToDisplay = _lastKnownVisitors;
+              
+              if (state is VisitorsLoaded) {
+                visitorsToDisplay = state.visitors;
+                log('✅ VisitorsLoaded: ${visitorsToDisplay.length} total visitors');
+              } else if (state is VisitorLoading && _lastKnownVisitors.isEmpty) {
+                log('⏳ VisitorBloc state: Initial Loading');
                 return const Center(
                   child: Padding(
                     padding: EdgeInsets.all(32.0),
                     child: CircularProgressIndicator(),
                   ),
                 );
-              }
-
-              if (state is VisitorsLoaded) {
-                final pendingVisitors = state.visitors.where(
-                      (visitor) => visitor.status == VisitorStatus.pending,
-                ).toList();
-
-                if (pendingVisitors.isEmpty) {
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.inbox_outlined,
-                            size: 48,
-                            color: Theme
-                                .of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No pending visitor requests',
-                            style: Theme
-                                .of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                              color: Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'You\'ll see new visitor requests here when they arrive.',
-                            style: Theme
-                                .of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                              color: Theme
-                                  .of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: pendingVisitors
-                      .take(5) // Show only first 5 pending visitors
-                      .map((visitor) =>
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: _buildPendingVisitorCard(
-                          context,
-                          visitor,
-                              () => _handleVisitorAction(visitor),
-                        ),
-                      ))
-                      .toList(),
-                );
-              }
-
-              if (state is VisitorError) {
+              } else if (state is VisitorError && _lastKnownVisitors.isEmpty) {
+                log('❌ VisitorBloc error: ${state.message}');
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -353,7 +309,7 @@ class _EmployeeHomeState extends State<EmployeeHome> {
                         ElevatedButton.icon(
                           onPressed: () =>
                               context.read<VisitorBloc>().add(
-                                GetVisitorsForEmployeeEvent(
+                                SubscribeToVisitorsForEmployeeEvent(
                                   employeeId: widget.user.uid ?? '',
                                 ),
                               ),
@@ -365,10 +321,85 @@ class _EmployeeHomeState extends State<EmployeeHome> {
                   ),
                 );
               }
+              
+              log('Employee ID being checked: ${widget.user.uid}');
+              
+              for (final visitor in visitorsToDisplay) {
+                log('Visitor: ${visitor.name} | Employee: ${visitor.employeeToMeetId} | Status: ${visitor.status}');
+              }
+              
+              final pendingVisitors = visitorsToDisplay.where(
+                    (visitor) => visitor.status == VisitorStatus.pending,
+              ).toList();
+              
+              log('🔴 Found ${pendingVisitors.length} pending visitors from ${visitorsToDisplay.length} total');
 
-              return const SizedBox.shrink();
+              if (pendingVisitors.isEmpty) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.inbox_outlined,
+                          size: 48,
+                          color: Theme
+                              .of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No pending visitor requests',
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You\'ll see new visitor requests here when they arrive.',
+                          style: Theme
+                              .of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                            color: Theme
+                                .of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: pendingVisitors
+                    .take(5) // Show only first 5 pending visitors
+                    .map((visitor) =>
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: _buildPendingVisitorCard(
+                        context,
+                        visitor,
+                            () => _handleVisitorAction(visitor),
+                      ),
+                    ))
+                    .toList(),
+              );
             },
           ),
+        ),
 
           const SizedBox(height: 24),
 

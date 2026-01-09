@@ -164,9 +164,13 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
         status: event.status,
       ),
     );
-    result.fold(
-      (failure) => emit(VisitorError(failure.message)),
+    
+    await result.fold(
+      (failure) async => emit(VisitorError(failure.message)),
       (visitor) async {
+        // Check if emitter is still active before proceeding
+        if (emit.isDone) return;
+        
         // Send notification to gatekeeper about status update
         try {
           final isApproved = event.status == VisitorStatus.approved;
@@ -191,7 +195,10 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
           log('❌ Failed to send status notification to gatekeeper: $e');
         }
         
-        emit(VisitorStatusUpdated(visitor));
+        // Check again before emitting to ensure event handler hasn't completed
+        if (!emit.isDone) {
+          emit(VisitorStatusUpdated(visitor));
+        }
       },
     );
   }
@@ -200,12 +207,24 @@ class VisitorBloc extends Bloc<VisitorEvent, VisitorState> {
     SubscribeToVisitorsForEmployeeEvent event,
     Emitter<VisitorState> emit,
   ) async {
+    log('🎯 Starting visitor stream subscription for employee: ${event.employeeId}');
+    
     await emit.forEach(
       _getVisitorsForEmployeeStream(
         GetVisitorsForEmployeeStreamParams(employeeId: event.employeeId),
       ),
-      onData: (visitors) => VisitorsLoaded(visitors),
-      onError: (error, _) => VisitorError(error.toString()),
+      onData: (visitors) {
+        log('📡 Stream data received: ${visitors.length} visitors for employee ${event.employeeId}');
+        for (final visitor in visitors) {
+          log('  - ${visitor.name} (Status: ${visitor.status}, Employee: ${visitor.employeeToMeetId})');
+        }
+        return VisitorsLoaded(visitors);
+      },
+      onError: (error, stackTrace) {
+        log('❌ Stream error for employee ${event.employeeId}: $error');
+        log('Stack trace: $stackTrace');
+        return VisitorError(error.toString());
+      },
     );
   }
 

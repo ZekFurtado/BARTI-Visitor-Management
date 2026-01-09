@@ -8,6 +8,7 @@ import 'package:visitor_management/src/visitor/presentation/pages/visitor_regist
 import 'package:visitor_management/src/visitor/presentation/pages/visitor_history_screen.dart';
 import 'package:visitor_management/src/visitor/presentation/pages/pending_visitors_screen.dart';
 import 'package:visitor_management/src/notifications/presentation/pages/notifications_screen.dart';
+import 'package:visitor_management/src/settings/presentation/pages/background_settings_screen.dart';
 
 class Routes {
   static const String splash = '/';
@@ -18,6 +19,7 @@ class Routes {
   static const String visitorHistory = '/visitor_history';
   static const String pendingVisitors = '/pending_visitors';
   static const String notifications = '/notifications';
+  static const String backgroundSettings = '/background_settings';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -99,6 +101,12 @@ class Routes {
             settings: const RouteSettings(name: login),
           );
         }
+
+      case backgroundSettings:
+        return MaterialPageRoute(
+          builder: (context) => const BackgroundSettingsScreen(),
+          settings: settings,
+        );
 
       default:
         return null;

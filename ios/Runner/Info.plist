@@ -45,5 +45,42 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Background modes for notifications and background app refresh -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-fetch</string>
+		<string>background-processing</string>
+		<string>remote-notification</string>
+		<string>background-app-refresh</string>
+	</array>
+	
+	<!-- Firebase Cloud Messaging configuration -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	
+	<!-- Push notification entitlements -->
+	<key>aps-environment</key>
+	<string>development</string>
+	
+	<!-- Background task identifiers -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.shrameco.visitor-management.refresh</string>
+		<string>com.shrameco.visitor-management.processing</string>
+	</array>
+	
+	<!-- App Transport Security -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+	
+	<!-- Privacy usage descriptions -->
+	<key>NSUserNotificationUsageDescription</key>
+	<string>This app needs notification access to alert you about visitor requests.</string>
+	<key>NSBackgroundRefreshUsageDescription</key>
+	<string>This app needs background refresh to receive visitor notifications when the app is closed.</string>
 </dict>
 </plist>

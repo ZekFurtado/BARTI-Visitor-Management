@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:googleapis_auth/auth_io.dart';
 import '../models/notification_models.dart';
+import '../../src/notifications/data/models/notification_model.dart';
 
 /// Service for handling push notifications
 class NotificationService {
@@ -83,8 +85,7 @@ class NotificationService {
       log('User declined or has not accepted permission for notifications');
     }
 
-    // Handle background messages
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // Background message handler is registered in main.dart
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
@@ -336,7 +337,7 @@ class NotificationService {
       final fcmPayload = notificationData.toFCMPayload();
       log('📱 Payload: ${jsonEncode(fcmPayload)}');
       
-      // Construct FCM HTTP v1 message format
+      // Construct FCM HTTP v1 message format for both foreground and background
       final requestBody = {
         'message': {
           'token': fcmToken,
@@ -347,14 +348,29 @@ class NotificationService {
           'android': {
             'priority': 'high',
             'notification': {
+              'channel_id': 'visitor_management_channel',
               'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'sound': 'default',
             },
+            // Add data to ensure background delivery
+            'data': (fcmPayload['data'] as Map<String, dynamic>?)?.map<String, String>(
+              (String key, dynamic value) => MapEntry(key, value.toString()),
+            ) ?? <String, String>{},
           },
           'apns': {
             'payload': {
               'aps': {
+                'alert': {
+                  'title': fcmPayload['notification']['title'],
+                  'body': fcmPayload['notification']['body'],
+                },
                 'content-available': 1,
+                'mutable-content': 1,
+                'sound': 'default',
               },
+            },
+            'fcm_options': {
+              'image': null,
             },
           },
         },
@@ -668,6 +684,9 @@ class NotificationService {
     log('Got a message whilst in the foreground!');
     log('Message data: ${message.data}');
 
+    // Save notification to Firestore for persistence
+    _saveNotificationToFirestore(message);
+
     if (message.notification != null) {
       log('Message also contained a notification: ${message.notification}');
       
@@ -678,6 +697,37 @@ class NotificationService {
         body: message.notification?.body ?? 'You have a new notification',
         payload: jsonEncode(message.data),
       );
+    }
+  }
+
+  /// Save FCM notification to Firestore for persistence
+  Future<void> _saveNotificationToFirestore(RemoteMessage message) async {
+    try {
+      // Extract recipient ID from message data
+      final recipientId = message.data['recipientId'] ?? 
+                         message.data['employeeId'] ?? 
+                         message.data['gatekeeperId'];
+      
+      if (recipientId == null) {
+        log('⚠️ No recipient ID found in FCM message data, skipping save');
+        return;
+      }
+
+      final notificationData = {
+        'title': message.notification?.title ?? '',
+        'body': message.notification?.body ?? '',
+      };
+
+      final notification = NotificationModel.fromFCMPayload(
+        notification: notificationData,
+        data: message.data,
+        recipientId: recipientId,
+      );
+
+      await _firestore.collection('notifications').add(notification.toFirestore());
+      log('✅ FCM notification saved to Firestore for user: $recipientId');
+    } catch (e) {
+      log('❌ Error saving FCM notification to Firestore: $e');
     }
   }
 
@@ -775,6 +825,61 @@ class NotificationService {
 /// Background message handler (must be top-level function)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  log('Handling a background message: ${message.messageId}');
-  // Handle background notification here
+  // Initialize Firebase if not already initialized
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    log('Firebase already initialized or error: $e');
+  }
+  
+  log('📱 Handling background message: ${message.messageId}');
+  log('📱 Background message data: ${message.data}');
+  log('📱 Background notification: ${message.notification?.title} - ${message.notification?.body}');
+  
+  // Initialize local notifications for background display
+  final localNotifications = FlutterLocalNotificationsPlugin();
+  
+  const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const iosSettings = DarwinInitializationSettings();
+  const settings = InitializationSettings(
+    android: androidSettings,
+    iOS: iosSettings,
+  );
+  
+  await localNotifications.initialize(settings);
+  
+  // Show local notification for background messages
+  if (message.notification != null) {
+    const androidDetails = AndroidNotificationDetails(
+      'visitor_management_channel',
+      'Visitor Management',
+      channelDescription: 'Notifications for visitor management app',
+      importance: Importance.high,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      showWhen: true,
+    );
+    
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    
+    const notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+    
+    await localNotifications.show(
+      message.hashCode,
+      message.notification!.title ?? 'Visitor Management',
+      message.notification!.body ?? 'You have a new notification',
+      notificationDetails,
+      payload: jsonEncode(message.data),
+    );
+    
+    log('✅ Background notification displayed locally');
+  }
 }

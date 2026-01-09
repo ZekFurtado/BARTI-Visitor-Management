@@ -270,113 +270,125 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Stream<DashboardStatsModel> getGatekeeperStatsStream() {
-    try {
-      return firestore.collection('visitor_profiles').snapshots().map((
-        snapshot,
-      ) {
-        final now = DateTime.now();
-        final startOfDay = DateTime(now.year, now.month, now.day);
+    return firestore
+        .collection('visitors')
+        .snapshots()
+        .map((snapshot) {
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
 
-        int totalRegistered = 0;
-        int pendingApprovals = 0;
-        int approvedToday = 0;
-        int rejectedToday = 0;
+      int totalRegistered = 0;
+      int pendingApprovals = 0;
+      int approvedToday = 0;
+      int rejectedToday = 0;
+      int completedToday = 0;
 
-        for (final doc in snapshot.docs) {
-          final data = doc.data();
-          final visits = List<Map<String, dynamic>>.from(data['visits'] ?? []);
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        
+        if (createdAt != null && 
+            createdAt.year == now.year &&
+            createdAt.month == now.month &&
+            createdAt.day == now.day) {
+          totalRegistered++;
 
-          for (final visitData in visits) {
-            final visitDate = (visitData['visitDate'] as Timestamp?)?.toDate();
-            if (visitDate != null && visitDate.isAfter(startOfDay)) {
-              totalRegistered++;
-
-              final status = visitData['status'] as String?;
-              switch (status) {
-                case 'pending':
-                  pendingApprovals++;
-                  break;
-                case 'approved':
-                  approvedToday++;
-                  break;
-                case 'rejected':
-                  rejectedToday++;
-                  break;
-              }
-            }
+          final status = parseVisitorStatus(data['status'] as String?);
+          switch (status) {
+            case VisitorStatus.pending:
+              pendingApprovals++;
+              break;
+            case VisitorStatus.approved:
+              approvedToday++;
+              break;
+            case VisitorStatus.rejected:
+              rejectedToday++;
+              break;
+            case VisitorStatus.completed:
+              completedToday++;
+              break;
           }
         }
+      }
 
-        return DashboardStatsModel(
-          todayVisitors: totalRegistered,
-          pendingApprovals: pendingApprovals,
-          approvedToday: approvedToday,
-          rejectedToday: rejectedToday,
-          completedToday: 0,
-          lastUpdated: DateTime.now(),
-        );
-      });
-    } catch (e) {
+      return DashboardStatsModel(
+        todayVisitors: totalRegistered,
+        pendingApprovals: pendingApprovals,
+        approvedToday: approvedToday,
+        rejectedToday: rejectedToday,
+        completedToday: completedToday,
+        lastUpdated: DateTime.now(),
+      );
+    }).handleError((error) {
       throw ServerException(
         statusCode: 'unknown',
-        message: 'Failed to get gatekeeper stats stream: $e',
+        message: 'Failed to get gatekeeper stats stream: $error',
       );
-    }
+    });
   }
 
   @override
   Stream<DashboardStatsModel> getEmployeeStatsStream(String employeeId) {
-    try {
-      return firestore.collection('visitor_profiles').snapshots().map((
-        snapshot,
-      ) {
-        final now = DateTime.now();
-        final startOfDay = DateTime(now.year, now.month, now.day);
+    return firestore
+        .collection('visitors')
+        .where('employeeToMeetId', isEqualTo: employeeId)
+        .snapshots()
+        .map((snapshot) {
+      final now = DateTime.now();
 
-        int pendingApprovals = 0;
-        int approvedToday = 0;
-        int rejectedToday = 0;
+      int totalToday = 0;
+      int pendingApprovals = 0;
+      int approvedToday = 0;
+      int rejectedToday = 0;
+      int completedToday = 0;
 
-        for (final doc in snapshot.docs) {
-          final data = doc.data();
-          final visits = List<Map<String, dynamic>>.from(data['visits'] ?? []);
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+        
+        // Count pending approvals (all time for this employee)
+        final status = parseVisitorStatus(data['status'] as String?);
+        if (status == VisitorStatus.pending) {
+          pendingApprovals++;
+        }
+        
+        // Count today's visitors for this employee
+        if (createdAt != null && 
+            createdAt.year == now.year &&
+            createdAt.month == now.month &&
+            createdAt.day == now.day) {
+          totalToday++;
 
-          for (final visitData in visits) {
-            if (visitData['employeeToMeetId'] == employeeId) {
-              final visitDate = (visitData['visitDate'] as Timestamp?)
-                  ?.toDate();
-              if (visitDate != null && visitDate.isAfter(startOfDay)) {
-                final status = visitData['status'] as String?;
-                switch (status) {
-                  case 'pending':
-                    pendingApprovals++;
-                    break;
-                  case 'approved':
-                    approvedToday++;
-                    break;
-                  case 'rejected':
-                    rejectedToday++;
-                    break;
-                }
-              }
-            }
+          switch (status) {
+            case VisitorStatus.approved:
+              approvedToday++;
+              break;
+            case VisitorStatus.rejected:
+              rejectedToday++;
+              break;
+            case VisitorStatus.completed:
+              completedToday++;
+              break;
+            case VisitorStatus.pending:
+              // Already counted above
+              break;
           }
         }
+      }
 
-        return DashboardStatsModel(
-          todayVisitors: pendingApprovals + approvedToday + rejectedToday,
-          pendingApprovals: pendingApprovals,
-          approvedToday: approvedToday,
-          rejectedToday: rejectedToday,
-          completedToday: 0,
-          lastUpdated: DateTime.now(),
-        );
-      });
-    } catch (e) {
+      return DashboardStatsModel(
+        todayVisitors: totalToday,
+        pendingApprovals: pendingApprovals,
+        approvedToday: approvedToday,
+        rejectedToday: rejectedToday,
+        completedToday: completedToday,
+        lastUpdated: DateTime.now(),
+      );
+    }).handleError((error) {
       throw ServerException(
         statusCode: 'unknown',
-        message: 'Failed to get employee stats stream: $e',
+        message: 'Failed to get employee stats stream: $error',
       );
-    }
+    });
   }
 }
