@@ -22,9 +22,28 @@ class VisitorHistoryItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with name and status
+            // Header with photo, name and status
             Row(
               children: [
+                // Visitor Photo
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  backgroundImage: visitor.photoUrl != null
+                      ? NetworkImage(visitor.photoUrl!)
+                      : null,
+                  child: visitor.photoUrl == null
+                      ? Text(
+                          visitor.name.substring(0, 1).toUpperCase(),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,25 +156,6 @@ class VisitorHistoryItem extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-            ],
-            if (visitor.photoUrl != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    IconlyLight.image,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Photo available',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
               ),
             ],
           ],
