@@ -87,7 +87,7 @@ class MyApp extends StatelessWidget {
           BlocProvider(create: (context) => di.sl<NotificationsBloc>()),
         ],
         child: MaterialApp(
-          title: 'BARTI Visitor Management',
+          title: 'ePravesh',
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
           theme: ThemeData(

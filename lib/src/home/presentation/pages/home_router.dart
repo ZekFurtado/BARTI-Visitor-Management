@@ -25,7 +25,7 @@ class HomeRouter extends StatelessWidget {
   Widget _buildRoleNotFoundScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BARTI'),
+        title: Text('ePravesh'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),

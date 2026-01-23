@@ -29,7 +29,7 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BARTI - Gatekeeper'),
+        title: Text('Gatekeeper'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [

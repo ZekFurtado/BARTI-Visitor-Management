@@ -32,7 +32,7 @@
     <uses-permission android:name="${applicationId}.permission.C2D_MESSAGE" />
 
     <application
-        android:label="visitor_management"
+        android:label="ePravesh"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:requestLegacyExternalStorage="true"

@@ -49,7 +49,7 @@ class _EmployeeHomeState extends State<EmployeeHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('BARTI - Employee'),
+        title: Text('Employee'),
         backgroundColor: Theme
             .of(context)
             .colorScheme

@@ -1,6 +1,17 @@
-# visitor_management
+# ePravesh (ई-प्रवेश)
 
-A new Flutter project.
+E-Pravesh is a smart visitor management system. The app enables gatekeepers to register visitors and employees to approve/reject visitor requests with real-time notifications.
+
+## About ePravesh
+
+**ePravesh** means "Electronic Entry" or "Digital Gateway" in Hindi. It's a modern, Flutter-based visitor management solution featuring:
+
+- Smart registration with auto-detection of returning visitors
+- Real-time push notifications
+- Photo capture for visitor identification
+- Role-based access (Gatekeepers & Employees)
+- Complete visitor history tracking
+- Cloud-based secure data storage with Firebase
 
 ## Getting Started
 

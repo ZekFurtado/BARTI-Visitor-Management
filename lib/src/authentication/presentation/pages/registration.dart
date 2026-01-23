@@ -42,7 +42,7 @@ class RegistrationScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Join BARTI Visitor Management',
+                        'Join ePravesh',
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: Theme.of(context).colorScheme.onSurface,
