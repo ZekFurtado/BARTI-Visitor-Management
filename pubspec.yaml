@@ -40,6 +40,7 @@ dependencies:
   firebase_auth: ^5.5.4
   firebase_storage: ^12.4.10
   firebase_messaging: ^15.0.4
+  cloud_functions: ^5.2.3
   flutter_local_notifications: ^17.2.4
 
   # Social Authentication

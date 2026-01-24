@@ -1,0 +1,869 @@
+# E-Pravesh (ई-प्रवेश) - Presentation Content
+## Smart Visitor Management System for BARTI
+
+## Instructions for ChatGPT
+Please create a PowerPoint presentation with 25 slides based on the content below. Use professional design, appropriate icons, and visual elements. Each section below represents a slide with its title and content.
+
+**App Branding:**
+- **App Name:** E-Pravesh (ई-प्रवेश)
+- **Meaning:** "Electronic Entry" or "Digital Gateway" in Hindi
+- **Tagline:** "Your Gateway to Modern Visitor Management"
+- **Organization:** BARTI (Dr. Babasaheb Ambedkar Research and Training Institute)
+
+**Note:** Slides 6-9 contain detailed workflow explanations showing the complete end-to-end process, timing, scenarios, and data flow. These are the core workflow slides that explain how the system operates in practice.
+
+---
+
+## Slide 1: Title Slide
+
+**Title:** E-Pravesh
+
+**Subtitle:** Smart Visitor Management System for BARTI
+
+**Tagline:** "Your Gateway to Modern Visitor Management"
+
+**Organization:** Dr. Babasaheb Ambedkar Research and Training Institute
+
+**Additional Info:**
+- Built with Flutter & Firebase
+- Real-time Notifications & Smart Registration
+- Role-Based Access Control
+- Digital. Secure. Efficient.
+
+---
+
+## Slide 2: Problem Statement
+
+**Title:** The Challenge of Visitor Management
+
+**Key Points:**
+- Manual visitor registration is time-consuming and error-prone
+- Employees unaware of visitor arrivals in advance
+- No centralized tracking system for visitor history
+- Difficulty in managing multiple visitors simultaneously
+- Lack of real-time communication between gatekeepers and employees
+- Security concerns with unauthorized access
+- No digital record keeping or analytics
+
+**Visual Suggestion:** Icons showing problems like paper forms, confused employees, waiting visitors
+
+---
+
+## Slide 3: Solution Overview
+
+**Title:** Introducing E-Pravesh - Our Comprehensive Solution
+
+**Key Features:**
+- **Smart Registration:** Auto-detects returning visitors by phone number
+- **Real-Time Notifications:** Instant push notifications to employees
+- **Photo Capture:** Visual identification with camera integration
+- **Dual Interface:** Separate workflows for gatekeepers and employees
+- **History Tracking:** Complete visitor profile and visit history
+- **Cloud-Based:** Firebase backend ensures data security and accessibility
+- **Mobile-First:** Native Android and iOS applications
+
+**Visual Suggestion:** App screenshots or feature icons in a circular/grid layout
+
+---
+
+## Slide 4: System Architecture
+
+**Title:** Built on Clean Architecture Principles
+
+**Architecture Layers:**
+1. **Presentation Layer**
+   - BLoC/Cubit state management
+   - Flutter UI components
+   - Real-time updates
+
+2. **Domain Layer**
+   - Business entities
+   - Use cases
+   - Repository contracts
+
+3. **Data Layer**
+   - Firebase integration
+   - Cloud Firestore
+   - Firebase Storage
+   - FCM notifications
+
+**Technical Stack:**
+- Flutter (Cross-platform)
+- Firebase Auth, Firestore, Storage, FCM
+- GetIt (Dependency Injection)
+- Clean Architecture + TDD
+
+**Visual Suggestion:** Architecture diagram with three layers
+
+---
+
+## Slide 5: User Roles & Authentication
+
+**Title:** Role-Based Access Control
+
+**User Roles:**
+
+**1. Gatekeeper**
+- Front desk personnel
+- Register visitors
+- Manage visitor flow
+- View all statistics
+
+**2. Employee**
+- Staff members
+- Approve/reject visitors
+- View personal visitor requests
+- Access visit history
+
+**Authentication Features:**
+- Firebase email/password authentication
+- Secure registration with role assignment
+- Additional fields: name, job role, department, phone
+- Profile pictures
+- Persistent login sessions
+- Splash screen with auto-login
+
+**Visual Suggestion:** Two personas with role icons and feature lists
+
+---
+
+## Slide 6: Complete Application Workflow
+
+**Title:** End-to-End Visitor Management Workflow
+
+**The Complete Journey:**
+
+**Phase 1: Visitor Arrival (Gatekeeper)**
+1. Visitor arrives at the gate
+2. Gatekeeper opens registration form
+3. Enters visitor's phone number
+4. System checks for existing visitor profile
+   - If found: Auto-fills all previous data
+   - If new: Creates new profile
+5. Gatekeeper captures visitor photo (camera/gallery)
+6. Selects employee to meet from searchable directory
+7. Completes form (origin, purpose, duration, notes)
+8. Submits registration
+
+**Phase 2: Notification & Review (Employee)**
+9. System saves visitor to Cloud Firestore (status: pending)
+10. Push notification sent to selected employee instantly
+11. Employee receives notification on mobile device
+12. Opens app and views visitor card on dashboard
+13. Reviews visitor information and photo
+
+**Phase 3: Decision (Employee)**
+14. Employee makes decision:
+    - **Approve:** Visitor cleared for entry
+    - **Reject:** Visitor request declined
+15. Taps Approve/Reject button on visitor card
+
+**Phase 4: Confirmation & Entry (Gatekeeper)**
+16. System updates visitor status in real-time
+17. Gatekeeper receives notification of decision
+18. Gatekeeper checks dashboard for updated status
+19. If approved: Allows visitor entry
+20. If rejected: Informs visitor politely
+21. All actions logged with timestamps
+
+**Visual Suggestion:** Flowchart with swim lanes for Gatekeeper, System, and Employee showing the complete flow with arrows and decision points
+
+---
+
+## Slide 7: Workflow Timing & Real-Time Features
+
+**Title:** Real-Time Workflow in Action
+
+**Typical Timeline:**
+
+**T+0 seconds: Registration Begins**
+- Gatekeeper starts visitor registration
+- Phone number entered triggers auto-search
+- Average time: 30 seconds with auto-fill
+
+**T+30 seconds: Photo Capture**
+- Visitor photo captured or selected
+- Uploaded to Firebase Storage
+- Average time: 10 seconds
+
+**T+40 seconds: Form Completion**
+- Employee selection via search
+- Purpose and duration added
+- Form validated
+
+**T+50 seconds: Submission**
+- Data saved to Cloud Firestore
+- Visitor status: Pending
+
+**T+51 seconds: Instant Notification**
+- Push notification sent via FCM
+- Employee's phone receives notification
+- Notification appears even if app is closed
+
+**T+2 minutes: Employee Review**
+- Employee opens app
+- Views visitor card with photo
+- Reviews all details
+
+**T+3 minutes: Decision Made**
+- Employee taps Approve or Reject
+- Status updated in Firestore
+
+**T+3 minutes + 1 second: Gatekeeper Notified**
+- Gatekeeper receives instant notification
+- Dashboard updates automatically
+- Decision visible in real-time
+
+**Total Time: 3-5 minutes** from arrival to approval
+
+**Key Real-Time Features:**
+- Instant push notifications (< 2 seconds)
+- Live dashboard updates via Firestore streams
+- No manual refresh required
+- Background notification delivery
+- Offline-capable with sync when online
+
+**Visual Suggestion:** Timeline graphic showing the workflow with time markers and icons for each step
+
+---
+
+## Slide 8: Workflow Scenarios & Edge Cases
+
+**Title:** Handling Different Scenarios
+
+**Scenario 1: Returning Visitor (Common Case)**
+1. Gatekeeper enters phone number
+2. System finds existing visitor profile
+3. Form auto-fills with: name, email, company, latest photo
+4. Gatekeeper only updates: employee to meet, purpose, duration
+5. New visit added to visitor's history
+6. **Time Saved:** 60% faster than first-time registration
+
+**Scenario 2: First-Time Visitor**
+1. Gatekeeper enters phone number
+2. System confirms "New visitor"
+3. Gatekeeper fills all fields manually
+4. Photo captured
+5. New visitor profile created
+6. First visit recorded in history
+
+**Scenario 3: Multiple Simultaneous Visitors**
+1. Multiple gatekeepers can register visitors simultaneously
+2. Each visitor gets unique ID and timestamp
+3. Multiple employees receive their respective notifications
+4. No conflicts or data loss
+5. Real-time sync ensures all data is accurate
+
+**Scenario 4: Employee Unavailable/Delayed Response**
+1. Visitor registered (status: pending)
+2. Notification sent to employee
+3. If employee doesn't respond immediately:
+   - Request remains in pending list
+   - Visible in employee's dashboard whenever they check
+   - Gatekeeper can see pending status
+   - Can be approved later (no timeout)
+
+**Scenario 5: Visitor Rejection**
+1. Employee rejects visitor request
+2. Gatekeeper notified immediately
+3. Gatekeeper informs visitor professionally
+4. Visit recorded in history (status: rejected)
+5. Useful for future reference and analytics
+
+**Scenario 6: Emergency/VIP Visitor**
+1. Gatekeeper can add priority notes
+2. Employee sees notes in visitor details
+3. Can approve immediately upon notification
+4. Fast-track workflow for urgent cases
+
+**Visual Suggestion:** Six scenarios shown as mini-flowcharts or card-based layouts with different colored paths
+
+---
+
+## Slide 9: Data Flow & System Integration
+
+**Title:** Behind the Scenes - How E-Pravesh Works
+
+**System Components & Data Flow:**
+
+**1. Gatekeeper App (Mobile)**
+- Flutter UI with forms and camera
+- Local validation
+- Image picker/camera integration
+- BLoC state management
+
+**2. Firebase Storage**
+- Receives visitor photos
+- Generates secure download URLs
+- Stores images with visitor ID reference
+
+**3. Cloud Firestore Database**
+- **Collections:**
+  - `users` - Gatekeeper and Employee profiles
+  - `visitors` - Individual visit records
+  - `visitor_profiles` - Returning visitor tracking
+  - `notifications` - Notification history
+  - `dashboard_stats` - Real-time statistics
+
+**4. Firebase Cloud Messaging (FCM)**
+- Receives notification requests
+- Routes to correct employee device
+- Delivers push notifications
+- Handles background delivery
+
+**5. Employee App (Mobile)**
+- Receives push notification
+- Fetches visitor data from Firestore
+- Displays visitor card with photo
+- Sends approval/rejection back to Firestore
+
+**6. Real-Time Sync**
+- Firestore streams update both apps instantly
+- No polling required
+- Bi-directional data flow
+- Conflict resolution handled by Firebase
+
+**Data Flow Steps:**
+1. Gatekeeper submits form → Flutter app validates
+2. Photo uploaded → Firebase Storage returns URL
+3. Visitor data + photo URL → Saved to Firestore
+4. Firestore triggers → FCM notification created
+5. FCM → Pushes to employee's device
+6. Employee responds → Updates Firestore
+7. Firestore stream → Updates gatekeeper's app
+8. Both apps show current status in real-time
+
+**Visual Suggestion:** System architecture diagram showing all components with arrows indicating data flow direction
+
+---
+
+## Slide 10: Gatekeeper Dashboard
+
+**Title:** Gatekeeper Home Screen - Command Center
+
+**Dashboard Components:**
+
+**Welcome Card:**
+- Personalized greeting with name and role
+- Current date and time
+
+**Real-Time Statistics:**
+- Total visitors today
+- Pending approvals count
+- Approved visitors today
+- Rejected visitors today
+
+**Quick Action Cards:**
+- Register New Visitor
+- View Pending Visitors
+- Visitor History
+- Settings
+
+**Bottom Navigation:**
+- Home, Notifications, History, Profile
+
+**Visual Suggestion:** Screenshot of gatekeeper dashboard with labeled sections
+
+---
+
+## Slide 11: Smart Visitor Registration (Part 1)
+
+**Title:** Intelligent Visitor Registration System
+
+**Smart Registration Features:**
+- **Auto-Detection:** System recognizes returning visitors by phone number
+- **Auto-Fill:** Pre-populates form with existing visitor data
+- **Profile Tracking:** Maintains complete visit history for each visitor
+- **New Visitor Creation:** Seamlessly creates profile for first-time visitors
+
+**Registration Process Flow:**
+1. Gatekeeper enters visitor phone number
+2. System searches existing visitor profiles
+3. If found: Auto-fills form with previous data
+4. If new: Creates fresh profile
+5. Gatekeeper verifies/updates information
+6. Captures photo and submits
+
+**Visual Suggestion:** Flowchart showing smart registration logic
+
+---
+
+## Slide 12: Smart Visitor Registration (Part 2)
+
+**Title:** Comprehensive Visitor Information Capture
+
+**Required Fields:**
+- Full name
+- Origin/Company name
+- Purpose of visit
+- Phone number (with auto-search)
+- Employee to meet (searchable directory)
+- Visitor photo (camera or gallery)
+
+**Optional Fields:**
+- Email address
+- Expected duration (30 min, 1 hour, 2 hours, 4 hours, Full day)
+- Additional notes for the employee
+
+**Form Features:**
+- Real-time validation
+- Employee search dialog with department/role display
+- Photo capture with camera or gallery selection
+- Form reset functionality
+- Error handling with user-friendly messages
+
+**Visual Suggestion:** Registration form mockup with labeled fields
+
+---
+
+## Slide 13: Photo Capture System
+
+**Title:** Visual Identification Made Easy
+
+**Photo Features:**
+- **Camera Integration:** Direct camera capture within app
+- **Gallery Selection:** Choose existing photos
+- **Photo Display:** Visitor photo shown in registration form
+- **Cloud Storage:** Automatic upload to Firebase Storage
+- **Photo Visibility:** Displayed in all visitor cards and profiles
+
+**Use Cases:**
+- Security identification
+- Employee recognition before meeting
+- Historical records with visual reference
+- Quick visitor verification
+
+**Benefits:**
+- Enhanced security
+- Faster visitor identification
+- Professional appearance
+- Digital record keeping
+
+**Visual Suggestion:** Phone mockup showing camera interface and photo display
+
+---
+
+## Slide 14: Employee Dashboard
+
+**Title:** Employee Home Screen - Visitor Management Hub
+
+**Dashboard Features:**
+
+**Welcome Card:**
+- Employee name, job role, and department
+- Personalized greeting
+
+**Pending Visitor Cards (Up to 5 displayed):**
+- Visitor photo
+- Name and origin/company
+- Purpose of visit
+- Expected duration
+- Direct Approve/Reject buttons on each card
+
+**Statistics Panel:**
+- Pending approvals count
+- Approved visitors today
+- Rejected visitors today
+
+**Recent Activity Feed:**
+- Recently approved/rejected visitors
+- Time since action (e.g., "2 hours ago")
+- Quick overview of daily activity
+
+**Visual Suggestion:** Employee dashboard screenshot with interactive visitor cards
+
+---
+
+## Slide 15: Visitor Approval Workflow
+
+**Title:** Streamlined Approval Process
+
+**Approval Workflow:**
+
+**Step 1: Notification**
+- Employee receives push notification of new visitor
+- Real-time notification badge on home screen
+
+**Step 2: Review**
+- View visitor card with photo and details
+- Access full information including:
+  - Name, origin, purpose
+  - Phone, email
+  - Expected duration
+  - Gatekeeper notes
+
+**Step 3: Decision**
+- Approve button: Allows visitor entry
+- Reject button: Declines visitor request
+- One-tap action directly from card
+
+**Step 4: Confirmation**
+- Success/error messages
+- Real-time status update
+- Notification sent to gatekeeper
+
+**Visual Suggestion:** Step-by-step workflow diagram with screenshots
+
+---
+
+## Slide 16: Visitor Profile & History System
+
+**Title:** Complete Visitor Tracking & History
+
+**Visitor Profile Features:**
+- **Unique Identification:** Tracked by phone number
+- **Complete Visit History:** All past visits with dates and status
+- **Profile Information:**
+  - Name, phone, email
+  - Latest photo
+  - Creation and update timestamps
+  - Notes and visit count
+
+**History Search Capabilities:**
+- Search by phone number
+- Search by name
+- Filter by date range
+- View recent visitors (last 30 days)
+- Complete visit details per entry
+
+**Visitor Status Tracking:**
+- Pending (awaiting approval)
+- Approved (cleared for entry)
+- Rejected (declined request)
+- Completed (visit finished)
+
+**Visual Suggestion:** Visitor profile card and history timeline
+
+---
+
+## Slide 17: Real-Time Notification System
+
+**Title:** Instant Communication with Firebase Cloud Messaging
+
+**Notification Types:**
+
+**1. Request Notification**
+- Sent to employee when new visitor registered
+- Contains visitor details and photo
+
+**2. Approval Notification**
+- Sent to gatekeeper when employee approves
+- Updates visitor status immediately
+
+**3. Rejection Notification**
+- Sent to gatekeeper when employee rejects
+- Includes rejection confirmation
+
+**Notification Features:**
+- **In-App Notification Center:** Centralized notification hub
+- **Unread Badge Count:** Visual indicator of pending notifications
+- **Mark as Read:** Individual or bulk mark as read
+- **Tap Navigation:** Tap notification to view relevant content
+- **Real-Time Delivery:** Instant push notifications
+- **Background Handling:** Notifications work even when app is closed
+
+**Visual Suggestion:** Notification bell icon with notification samples
+
+---
+
+## Slide 18: Background Service & Reliability
+
+**Title:** Ensuring Reliable Notification Delivery
+
+**Background Service Features:**
+
+**Android:**
+- Battery optimization management
+- Background service monitoring
+- Persistent notification service
+- Device settings configuration guide
+
+**iOS:**
+- Background app refresh support
+- Notification permission handling
+- APNs integration
+
+**Reliability Features:**
+- Service status monitoring screen
+- Manual service restart option
+- Platform-specific instructions
+- Permission status indicators
+- Direct links to device settings
+
+**Benefits:**
+- Notifications delivered even when app is closed
+- No missed visitor requests
+- Reliable real-time communication
+- User-friendly troubleshooting
+
+**Visual Suggestion:** Phone with notification icons and service status screen
+
+---
+
+## Slide 19: Dashboard Analytics & Statistics
+
+**Title:** Real-Time Insights & Analytics
+
+**Statistics Dashboard:**
+
+**Gatekeeper View (All Statistics):**
+- Total visitors today
+- Total pending approvals (all employees)
+- Total approved visitors today
+- Total rejected visitors today
+- Last updated timestamp
+
+**Employee View (Personal Statistics):**
+- Pending approvals for specific employee
+- Approved visitors for employee
+- Rejected visitors for employee
+- Personal activity metrics
+
+**Real-Time Features:**
+- Auto-refreshing statistics via Firestore streams
+- Live updates without manual refresh
+- Color-coded stat cards
+- Visual icons for each metric
+- Error handling with retry functionality
+
+**Visual Suggestion:** Dashboard with colorful stat cards and graphs
+
+---
+
+## Slide 20: Employee Directory & Selection
+
+**Title:** Smart Employee Management
+
+**Employee Directory Features:**
+- Complete employee list
+- Search by name functionality
+- Department and job role display
+- Visual avatars with initials
+- Active status indicators
+
+**Employee Selection Dialog:**
+- Searchable dropdown during visitor registration
+- Department filtering
+- Job role display for context
+- Profile pictures
+- Quick selection interface
+
+**Employee Information:**
+- Name, email, phone
+- Job role and department
+- Profile picture
+- Office location
+- Join date
+- Active status
+
+**Visual Suggestion:** Employee directory interface with search and selection
+
+---
+
+## Slide 21: Technical Excellence
+
+**Title:** Built with Best Practices
+
+**Development Approach:**
+- **Clean Architecture:** Separation of concerns, maintainable code
+- **Test-Driven Development (TDD):** Quality-first approach
+- **BLoC Pattern:** Predictable state management
+- **Dependency Injection:** GetIt service locator pattern
+
+**Key Technical Features:**
+- Real-time data synchronization with Firestore streams
+- Secure authentication with Firebase Auth
+- Cloud storage for photos (Firebase Storage)
+- Cross-platform support (Android & iOS)
+- Responsive UI with Material Design 3
+- Centralized error handling
+- Offline capability considerations
+
+**Code Quality:**
+- Flutter analyze for code quality
+- Consistent formatting
+- Comprehensive error handling
+- User-friendly error messages
+
+**Visual Suggestion:** Tech stack logos and architecture icons
+
+---
+
+## Slide 22: Security & Data Management
+
+**Title:** Enterprise-Grade Security
+
+**Security Features:**
+
+**Authentication Security:**
+- Firebase Authentication
+- Secure password handling
+- Role-based access control
+- Session management
+- Persistent login with token management
+
+**Data Security:**
+- Cloud Firestore with security rules
+- Role-based data access
+- Encrypted data transmission
+- Secure photo storage
+- User data privacy
+
+**Access Control:**
+- Gatekeepers: Full visitor management access
+- Employees: Only their visitor requests
+- Isolated data per user role
+- Audit trail with timestamps
+
+**Compliance:**
+- Data stored in secure Firebase infrastructure
+- GDPR-compliant data handling
+- User consent for photo capture
+
+**Visual Suggestion:** Security shield icons and data encryption visuals
+
+---
+
+## Slide 23: Key Benefits & Impact
+
+**Title:** E-Pravesh - Transforming Visitor Management
+
+**For Gatekeepers:**
+- 60% faster visitor registration with auto-fill
+- Reduced data entry errors
+- Complete visitor tracking
+- Real-time status updates
+- Digital record keeping
+
+**For Employees:**
+- Advance notification of visitors
+- Mobile approval from anywhere
+- No interruptions for unexpected visitors
+- Complete visitor information before meeting
+- Historical visitor records
+
+**For the Organization:**
+- Enhanced security and access control
+- Digital audit trail
+- Real-time analytics and reporting
+- Professional visitor experience
+- Reduced paper waste and manual processes
+- Scalable solution for growth
+
+**Visual Suggestion:** Before/after comparison or benefit icons with metrics
+
+---
+
+## Slide 24: Future Enhancements
+
+**Title:** Roadmap & Vision
+
+**Planned Features:**
+
+**Short-Term:**
+- Check-in/Check-out functionality
+- Visitor ID card printing
+- QR code generation for approved visitors
+- SMS notifications for visitors
+- Visitor pre-registration portal
+
+**Medium-Term:**
+- Analytics dashboard with charts and graphs
+- Export visitor reports (PDF, Excel)
+- Multi-location support
+- Visitor badge printing integration
+- Email notifications
+
+**Long-Term:**
+- Facial recognition integration
+- Visitor kiosk self-registration
+- Integration with access control systems
+- Visitor appointment scheduling
+- Multi-language support
+- Web dashboard for administrators
+
+**Visual Suggestion:** Roadmap timeline with feature icons
+
+---
+
+## Slide 25: Conclusion & Thank You
+
+**Title:** Thank You
+
+**Summary:**
+**E-Pravesh** revolutionizes institutional visitor management with:
+- Smart, efficient registration
+- Real-time notifications
+- Complete visitor tracking
+- Professional, secure solution
+
+**Key Achievements:**
+- 7 feature modules
+- 78+ Dart files
+- Clean Architecture implementation
+- Cross-platform mobile app (Android & iOS)
+- Enterprise-ready solution
+- Powered by Flutter & Firebase
+
+**Contact Information:**
+- **App Name:** E-Pravesh (ई-प्रवेश)
+- **Organization:** Dr. Babasaheb Ambedkar Research and Training Institute (BARTI)
+- **Technology Stack:** Flutter + Firebase
+- **Architecture:** Clean Architecture with TDD
+
+**Tagline:** "Your Gateway to Modern Visitor Management"
+
+**Call to Action:**
+Ready to modernize your visitor management with E-Pravesh? Let's discuss implementation!
+
+**Visual Suggestion:** E-Pravesh logo, QR code for demo, and contact information
+
+---
+
+## Additional Design Notes for ChatGPT:
+
+**Branding:**
+- **App Name:** E-Pravesh (ई-प्रवेश) - prominently display on title slide and footer
+- **Logo Suggestion:** Gateway/door icon combined with digital elements (circuit, waves)
+- **Brand Colors:** Modern, professional, trustworthy (blue/green theme)
+- Include Hindi text "ई-प्रवेश" with English "E-Pravesh" for cultural relevance
+
+**Color Scheme Suggestions:**
+- Primary: Professional blue (#2196F3) - represents trust and technology
+- Secondary: Green for approved (#4CAF50) - represents access granted
+- Accent: Orange for pending (#FF9800) - represents waiting/review
+- Error: Red for rejected (#F44336) - represents denied access
+- Background: Clean white with subtle gray accents
+- Brand Gradient: Blue to teal for modern tech feel
+
+**Visual Elements:**
+- Use phone mockups for app screenshots
+- Include icons for each feature (FontAwesome or Material Icons)
+- Add flowcharts for workflows
+- Use statistics/charts where applicable
+- Include before/after comparisons
+- Add people illustrations for user roles
+
+**Typography:**
+- Use clean, professional sans-serif fonts
+- Clear hierarchy with heading sizes
+- Bullet points for easy reading
+- Bold key terms
+
+**Layout Tips:**
+- Maximum 6-7 bullet points per slide
+- Use two-column layouts for comparisons
+- Include visual breaks with images/icons
+- Maintain consistent spacing
+- Use slide numbers
+- Add subtle slide transitions
+
+**Presentation Flow:**
+1-5: Introduction and context (title, problem, solution, architecture, roles)
+6-9: Complete workflow explanation (end-to-end, timing, scenarios, data flow)
+10-16: Feature deep-dives (dashboards, registration, photos, approval, history)
+17-19: Technical capabilities (notifications, background services, analytics)
+20-22: Employee management, technical excellence, security
+23-25: Benefits, future roadmap, conclusion
+
+Total: 25 slides

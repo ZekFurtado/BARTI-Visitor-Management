@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:visitor_management/src/organization/domain/entities/organization.dart';
 import 'package:visitor_management/src/authentication/data/datasources/auth_remote_data_source.dart';
 import 'package:visitor_management/src/authentication/data/repositories/auth_repository_impl.dart';
 import 'package:visitor_management/src/authentication/domain/repositories/auth_repository.dart';
@@ -43,7 +44,14 @@ import 'notification_service.dart';
 
 final sl = GetIt.instance;
 
-Future<void> init() async {
+/// Initialize dependency injection with organization context
+/// The organization parameter provides tenant-specific configuration
+Future<void> init({Organization? organization}) async {
+  // Register organization as singleton (available throughout the app)
+  if (organization != null) {
+    sl.registerSingleton<Organization>(organization);
+  }
+
   final sharedPreferences = await SharedPreferences.getInstance();
   sl
     /// APP LOGIC
