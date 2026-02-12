@@ -8,10 +8,12 @@ import 'package:visitor_management/src/organization/domain/entities/organization
 /// Shown when no cached subdomain is found
 class SubdomainEntryScreen extends StatefulWidget {
   final TenantConfigService tenantService;
+  final VoidCallback? onRestart;
 
   const SubdomainEntryScreen({
     super.key,
     required this.tenantService,
+    this.onRestart,
   });
 
   @override
@@ -125,10 +127,8 @@ class _SubdomainEntryScreenState extends State<SubdomainEntryScreen> {
         actions: [
           ElevatedButton(
             onPressed: () {
-              // TODO: Implement app restart or navigate to main app
-              // For now, just close the dialog
               Navigator.of(context).pop();
-              // In production, you might want to restart the app here
+              widget.onRestart?.call();
             },
             child: const Text('Restart App'),
           ),

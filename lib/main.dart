@@ -75,7 +75,7 @@ Future<void> main() async {
   } catch (e) {
     log('⚠️ No subdomain configured, showing entry screen', name: 'Main');
     // Show subdomain entry screen
-    runApp(SubdomainEntryApp(tenantService: tenantService));
+    runApp(SubdomainEntryApp(tenantService: tenantService, onRestart: main));
     return;
   }
 

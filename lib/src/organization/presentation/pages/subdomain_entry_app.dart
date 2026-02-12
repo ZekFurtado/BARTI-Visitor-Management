@@ -6,10 +6,12 @@ import 'package:visitor_management/src/organization/presentation/pages/subdomain
 /// Used when no tenant configuration is available and we need to collect subdomain
 class SubdomainEntryApp extends StatelessWidget {
   final TenantConfigService tenantService;
+  final VoidCallback? onRestart;
 
   const SubdomainEntryApp({
     super.key,
     required this.tenantService,
+    this.onRestart,
   });
 
   @override
@@ -23,7 +25,7 @@ class SubdomainEntryApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: SubdomainEntryScreen(tenantService: tenantService),
+      home: SubdomainEntryScreen(tenantService: tenantService, onRestart: onRestart),
     );
   }
 }
