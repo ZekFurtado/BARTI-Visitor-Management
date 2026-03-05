@@ -44,6 +44,8 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
               if (value == 'profile') {
                 // Navigate to profile
                 log('Navigate to profile');
+              } else if (value == 'settings') {
+                Navigator.of(context).pushNamed(Routes.settings);
               } else if (value == 'logout') {
                 context.read<AuthenticationBloc>().add(SignOutUserEvent());
                 Navigator.of(
@@ -59,6 +61,16 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
                     Icon(Icons.person, size: 20),
                     SizedBox(width: 8),
                     Text('Profile'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Settings'),
                   ],
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:visitor_management/core/widgets/legal_links_widget.dart';
 import 'package:visitor_management/src/authentication/presentation/pages/widgets/login_form.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -110,6 +111,8 @@ class LoginScreen extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 12),
+                const LegalLinksWidget(),
               ],
             ),
           ),

@@ -9,6 +9,9 @@ import 'package:visitor_management/src/visitor/presentation/pages/visitor_histor
 import 'package:visitor_management/src/visitor/presentation/pages/pending_visitors_screen.dart';
 import 'package:visitor_management/src/notifications/presentation/pages/notifications_screen.dart';
 import 'package:visitor_management/src/settings/presentation/pages/background_settings_screen.dart';
+import 'package:visitor_management/src/settings/presentation/pages/settings_screen.dart';
+import 'package:visitor_management/src/legal/legal_content.dart';
+import 'package:visitor_management/src/legal/presentation/pages/legal_screen.dart';
 
 class Routes {
   static const String splash = '/';
@@ -20,6 +23,8 @@ class Routes {
   static const String pendingVisitors = '/pending_visitors';
   static const String notifications = '/notifications';
   static const String backgroundSettings = '/background_settings';
+  static const String settings = '/settings';
+  static const String legalDocument = '/legal';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -107,6 +112,22 @@ class Routes {
           builder: (context) => const BackgroundSettingsScreen(),
           settings: settings,
         );
+
+      case '/settings':
+        return MaterialPageRoute(
+          builder: (context) => const SettingsScreen(),
+          settings: settings,
+        );
+
+      case legalDocument:
+        final type = settings.arguments as LegalDocumentType?;
+        if (type != null) {
+          return MaterialPageRoute(
+            builder: (context) => LegalScreen(type: type),
+            settings: settings,
+          );
+        }
+        return null;
 
       default:
         return null;

@@ -58,13 +58,18 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         
         for (var visitData in visits) {
           final visitMap = visitData as Map<String, dynamic>;
-          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
-          
-          if (createdAt != null && 
-              createdAt.isAfter(startOfDay) && 
-              createdAt.isBefore(endOfDay)) {
+          final visitDateRaw = visitMap['visitDate'];
+          final visitDate = visitDateRaw is Timestamp
+              ? visitDateRaw.toDate()
+              : visitDateRaw is String
+                  ? DateTime.tryParse(visitDateRaw)
+                  : null;
+
+          if (visitDate != null &&
+              visitDate.isAfter(startOfDay) &&
+              visitDate.isBefore(endOfDay)) {
             todayVisitorsCount++;
-            
+
             final status = parseVisitorStatus(visitMap['status'] as String?);
             switch (status) {
               case VisitorStatus.pending:
@@ -139,17 +144,22 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           // Only count visits for this specific employee
           if (employeeToMeetId == employeeId) {
             final status = parseVisitorStatus(visitMap['status'] as String?);
-            
+
             // Count pending approvals (all time for this employee)
             if (status == VisitorStatus.pending) {
               pendingCount++;
             }
-            
+
             // Count today's visitors for this employee
-            final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
-            if (createdAt != null && 
-                createdAt.isAfter(startOfDay) && 
-                createdAt.isBefore(endOfDay)) {
+            final visitDateRaw = visitMap['visitDate'];
+            final visitDate = visitDateRaw is Timestamp
+                ? visitDateRaw.toDate()
+                : visitDateRaw is String
+                    ? DateTime.tryParse(visitDateRaw)
+                    : null;
+            if (visitDate != null &&
+                visitDate.isAfter(startOfDay) &&
+                visitDate.isBefore(endOfDay)) {
               todayVisitorsCount++;
               
               switch (status) {
@@ -217,11 +227,16 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         
         for (var visitData in visits) {
           final visitMap = visitData as Map<String, dynamic>;
-          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
-          
-          if (createdAt != null && 
-              createdAt.isAfter(startOfDay) && 
-              createdAt.isBefore(endOfDay)) {
+          final visitDateRaw = visitMap['visitDate'];
+          final visitDate = visitDateRaw is Timestamp
+              ? visitDateRaw.toDate()
+              : visitDateRaw is String
+                  ? DateTime.tryParse(visitDateRaw)
+                  : null;
+
+          if (visitDate != null &&
+              visitDate.isAfter(startOfDay) &&
+              visitDate.isBefore(endOfDay)) {
             todayVisitorCount++;
           }
         }
@@ -355,11 +370,16 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         
         for (var visitData in visits) {
           final visitMap = visitData as Map<String, dynamic>;
-          final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
-          
-          if (createdAt != null && 
-              createdAt.isAfter(startOfDay) && 
-              createdAt.isBefore(endOfDay)) {
+          final visitDateRaw = visitMap['visitDate'];
+          final visitDate = visitDateRaw is Timestamp
+              ? visitDateRaw.toDate()
+              : visitDateRaw is String
+                  ? DateTime.tryParse(visitDateRaw)
+                  : null;
+
+          if (visitDate != null &&
+              visitDate.isAfter(startOfDay) &&
+              visitDate.isBefore(endOfDay)) {
             totalRegistered++;
 
             final status = parseVisitorStatus(visitMap['status'] as String?);
@@ -424,17 +444,22 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
           // Only count visits for this specific employee
           if (employeeToMeetId == employeeId) {
             final status = parseVisitorStatus(visitMap['status'] as String?);
-            
+
             // Count pending approvals (all time for this employee)
             if (status == VisitorStatus.pending) {
               pendingApprovals++;
             }
-            
+
             // Count today's visitors for this employee
-            final createdAt = (visitMap['createdAt'] as Timestamp?)?.toDate();
-            if (createdAt != null && 
-                createdAt.isAfter(startOfDay) && 
-                createdAt.isBefore(endOfDay)) {
+            final visitDateRaw = visitMap['visitDate'];
+            final visitDate = visitDateRaw is Timestamp
+                ? visitDateRaw.toDate()
+                : visitDateRaw is String
+                    ? DateTime.tryParse(visitDateRaw)
+                    : null;
+            if (visitDate != null &&
+                visitDate.isAfter(startOfDay) &&
+                visitDate.isBefore(endOfDay)) {
               totalToday++;
 
               switch (status) {

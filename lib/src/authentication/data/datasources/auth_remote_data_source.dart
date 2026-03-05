@@ -121,10 +121,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
                   isFirstTime: userDataFromFirestore.isFirstTime,
                   phone: userDataFromFirestore.phone,
                   createdOn: userDataFromFirestore.createdOn,
+                  organizationMemberships: userDataFromFirestore.organizationMemberships,
                 );
               } catch (e) {
-                // If Firestore data doesn't exist, return Firebase user data only
-                // This handles cases where user registered but Firestore data wasn't created
+                // Firestore document missing or unreadable — user has no role/profile
+                // ignore: avoid_print
+                print('⚠️ emailSignIn: Firestore profile missing for uid ${firebaseUser.uid}: $e');
                 await _storeFCMToken(firebaseUser.uid!);
                 return firebaseUser;
               }
@@ -363,9 +365,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           isFirstTime: userDataFromFirestore.isFirstTime,
           phone: userDataFromFirestore.phone,
           createdOn: userDataFromFirestore.createdOn,
+          organizationMemberships: userDataFromFirestore.organizationMemberships,
         );
       } catch (e) {
-        // If Firestore data doesn't exist, return Firebase user data only
+        // Firestore document missing or unreadable — user has no role/profile
+        // ignore: avoid_print
+        print('⚠️ getUserSession: Firestore profile missing for uid ${firebaseUser.uid}: $e');
         return firebaseUser;
       }
     } on FirebaseAuthException catch (e) {

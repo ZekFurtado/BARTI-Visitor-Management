@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:visitor_management/core/widgets/loader_dialog.dart';
 import 'package:visitor_management/core/utils/routes.dart';
 import 'package:visitor_management/src/authentication/presentation/bloc/authentication_bloc.dart';
+import 'package:visitor_management/src/legal/legal_content.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({super.key});
@@ -25,6 +26,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   String _selectedRole = 'Gatekeeper';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _consentAccepted = false;
 
   final List<String> _roles = ['Gatekeeper', 'Employee'];
   final List<String> _jobRoles = [
@@ -309,6 +311,14 @@ class _RegistrationFormState extends State<RegistrationForm> {
             ),
             const SizedBox(height: 24),
 
+            // Consent Checkbox
+            _ConsentCheckbox(
+              value: _consentAccepted,
+              onChanged: (v) => setState(() => _consentAccepted = v ?? false),
+            ),
+
+            const SizedBox(height: 16),
+
             // Register Button
             ElevatedButton(
               onPressed: () => _handleRegistration(),
@@ -335,6 +345,17 @@ class _RegistrationFormState extends State<RegistrationForm> {
   }
 
   void _handleRegistration() {
+    if (!_consentAccepted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Please accept the Terms & Conditions, Privacy Policy, and EULA to continue.',
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
@@ -356,5 +377,73 @@ class _RegistrationFormState extends State<RegistrationForm> {
       
       log('Registration attempted: $email, $name, $role, $jobRole, $department');
     }
+  }
+}
+
+/// Consent checkbox shown during registration. Tapping the policy names
+/// navigates to the respective [LegalScreen].
+class _ConsentCheckbox extends StatelessWidget {
+  const _ConsentCheckbox({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool?> onChanged;
+
+  void _open(BuildContext context, LegalDocumentType type) {
+    Navigator.of(context).pushNamed(Routes.legalDocument, arguments: type);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final linkStyle = TextStyle(
+      color: theme.colorScheme.primary,
+      decoration: TextDecoration.underline,
+      fontSize: 13,
+    );
+    final normalStyle = TextStyle(
+      color: theme.colorScheme.onSurfaceVariant,
+      fontSize: 13,
+    );
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Checkbox(
+          value: value,
+          onChanged: onChanged,
+          activeColor: theme.colorScheme.primary,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 11),
+            child: Wrap(
+              children: [
+                Text('I agree to the ', style: normalStyle),
+                GestureDetector(
+                  onTap: () =>
+                      _open(context, LegalDocumentType.termsAndConditions),
+                  child: Text('Terms & Conditions', style: linkStyle),
+                ),
+                Text(', ', style: normalStyle),
+                GestureDetector(
+                  onTap: () =>
+                      _open(context, LegalDocumentType.privacyPolicy),
+                  child: Text('Privacy Policy', style: linkStyle),
+                ),
+                Text(', and ', style: normalStyle),
+                GestureDetector(
+                  onTap: () => _open(context, LegalDocumentType.eula),
+                  child: Text('EULA', style: linkStyle),
+                ),
+                Text('.', style: normalStyle),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

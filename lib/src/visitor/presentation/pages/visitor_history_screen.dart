@@ -46,7 +46,7 @@ class _VisitorHistoryScreenState extends State<VisitorHistoryScreen> {
       appBar: AppBar(
         title: const Text('Visit History'),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         elevation: 0,
         actions: [
           IconButton(

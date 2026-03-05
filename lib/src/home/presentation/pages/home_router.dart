@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:visitor_management/core/common/user_provider.dart';
 import 'package:visitor_management/src/authentication/domain/entities/user.dart';
 import 'package:visitor_management/src/home/presentation/pages/employee_home.dart';
 import 'package:visitor_management/src/home/presentation/pages/gatekeeper_home.dart';
@@ -10,8 +12,18 @@ class HomeRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Route user to appropriate home screen based on role
-    switch (user.role?.toLowerCase()) {
+    // Determine the effective role: prefer legacy field, fall back to
+    // organizationMemberships for multi-tenant users.
+    String? effectiveRole = user.role;
+    if (effectiveRole == null) {
+      final orgId =
+          Provider.of<UserProvider>(context, listen: false).currentOrganization?.id;
+      if (orgId != null) {
+        effectiveRole = user.getRoleInOrg(orgId);
+      }
+    }
+
+    switch (effectiveRole?.toLowerCase()) {
       case 'gatekeeper':
         return GatekeeperHome(user: user);
       case 'employee':
@@ -50,7 +62,9 @@ class HomeRouter extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Your account does not have a proper role assigned. Please contact the administrator to assign a role (Gatekeeper or Employee).',
+                user.organizationMemberships.isEmpty
+                    ? 'Your account profile was not found in the system. Please register through the app or ask your administrator to add your account.'
+                    : 'Your account does not have a proper role assigned for this organization. Please contact the administrator to assign a role (Gatekeeper or Employee).',
                 style: Theme.of(context).textTheme.bodyLarge,
                 textAlign: TextAlign.center,
               ),

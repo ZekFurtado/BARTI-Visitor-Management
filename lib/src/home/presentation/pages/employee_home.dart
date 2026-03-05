@@ -99,6 +99,8 @@ class _EmployeeHomeState extends State<EmployeeHome> {
               if (value == 'profile') {
                 log('Navigate to profile');
                 // TODO: Navigate to profile screen
+              } else if (value == 'settings') {
+                Navigator.of(context).pushNamed(Routes.settings);
               } else if (value == 'logout') {
                 context.read<AuthenticationBloc>().add(SignOutUserEvent());
                 Navigator.of(context).pushNamedAndRemoveUntil(
@@ -116,6 +118,16 @@ class _EmployeeHomeState extends State<EmployeeHome> {
                     Icon(Icons.person, size: 20),
                     SizedBox(width: 8),
                     Text('Profile'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_outlined, size: 20),
+                    SizedBox(width: 8),
+                    Text('Settings'),
                   ],
                 ),
               ),
