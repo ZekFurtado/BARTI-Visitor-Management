@@ -8,9 +8,10 @@ import '../../domain/entities/visitor.dart';
 import '../bloc/visitor_bloc.dart';
 
 class PendingVisitorsScreen extends StatefulWidget {
-  const PendingVisitorsScreen({super.key, required this.user});
+  const PendingVisitorsScreen({super.key, required this.user, this.effectiveRole});
 
   final LocalUser user;
+  final String? effectiveRole;
 
   @override
   State<PendingVisitorsScreen> createState() => _PendingVisitorsScreenState();
@@ -22,7 +23,8 @@ class _PendingVisitorsScreenState extends State<PendingVisitorsScreen> {
     super.initState();
 
     // Subscribe to real-time visitor updates based on user role
-    if (widget.user.role == 'gatekeeper') {
+    final role = widget.effectiveRole ?? widget.user.role;
+    if (role == 'gatekeeper') {
       // Gatekeepers see all pending visitors
       context.read<VisitorBloc>().add(
         const GetVisitorsByStatusEvent(status: VisitorStatus.pending),
@@ -115,7 +117,7 @@ class _PendingVisitorsScreenState extends State<PendingVisitorsScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        widget.user.role == 'gatekeeper'
+                        (widget.effectiveRole ?? widget.user.role) == 'gatekeeper'
                             ? 'All visitors have been processed.'
                             : 'You have no pending visitor requests.',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -152,7 +154,8 @@ class _PendingVisitorsScreenState extends State<PendingVisitorsScreen> {
   }
 
   void _refreshPendingVisitors() {
-    if (widget.user.role == 'gatekeeper') {
+    final role = widget.effectiveRole ?? widget.user.role;
+    if (role == 'gatekeeper') {
       context.read<VisitorBloc>().add(
         const GetVisitorsByStatusEvent(status: VisitorStatus.pending),
       );
@@ -254,7 +257,7 @@ class _PendingVisitorsScreenState extends State<PendingVisitorsScreen> {
             _buildDetailRow('Registered', _formatDateTime(visitor.createdAt)),
 
             // Show employee info for gatekeepers
-            if (widget.user.role == 'gatekeeper' &&
+            if ((widget.effectiveRole ?? widget.user.role) == 'gatekeeper' &&
                 visitor.employeeToMeetName?.isNotEmpty == true)
               _buildDetailRow(
                 'Employee to Meet',
@@ -262,7 +265,7 @@ class _PendingVisitorsScreenState extends State<PendingVisitorsScreen> {
               ),
 
             // Action buttons for employees only
-            if (widget.user.role == 'employee') ...[
+            if ((widget.effectiveRole ?? widget.user.role) == 'employee') ...[
               const SizedBox(height: 20),
               Row(
                 children: [

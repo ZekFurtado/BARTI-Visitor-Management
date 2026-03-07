@@ -78,7 +78,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              '© ${DateTime.now().year} BARTI',
+              '© ${DateTime.now().year} E-Pravesh',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

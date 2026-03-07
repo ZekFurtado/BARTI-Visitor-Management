@@ -64,7 +64,7 @@ class LegalContent {
       LegalSection(
         heading: '2. Description of Service',
         body:
-            'E-Pravesh is a visitor management application developed for BARTI (Dr Babasaheb Ambedkar Research and Training Institute). The App enables gatekeepers to register visitors and employees to approve or reject visitor requests with real-time notifications.',
+            'E-Pravesh is a multi-tenant visitor management platform developed and operated by Shrameco. The App enables organizations to manage visitor access — allowing gatekeepers to register visitors and employees to approve or reject visitor requests with real-time notifications.',
       ),
       LegalSection(
         heading: '3. User Accounts',
@@ -81,7 +81,7 @@ class LegalContent {
       LegalSection(
         heading: '5. Acceptable Use',
         body:
-            'You agree to use the App only for its intended visitor management purpose within BARTI premises. You must not:\n\n'
+            'You agree to use the App only for its intended visitor management purpose within your organization\'s premises. You must not:\n\n'
             '• Use the App for any unlawful purpose\n'
             '• Collect or store personal data beyond what visitor management requires\n'
             '• Share visitor information with unauthorized parties\n'
@@ -105,7 +105,7 @@ class LegalContent {
       LegalSection(
         heading: '9. Contact',
         body:
-            'For questions about these Terms & Conditions, contact us at legal@barti.gov.in.',
+            'For questions about these Terms & Conditions, contact us at legal@shrameco.com.',
       ),
     ],
   );
@@ -120,7 +120,7 @@ class LegalContent {
       LegalSection(
         heading: '1. Introduction',
         body:
-            'BARTI (Dr Babasaheb Ambedkar Research and Training Institute) is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use E-Pravesh.',
+            'Shrameco is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use E-Pravesh.',
       ),
       LegalSection(
         heading: '2. Information We Collect',
@@ -148,7 +148,7 @@ class LegalContent {
       LegalSection(
         heading: '5. Data Sharing',
         body:
-            'We do not sell, trade, or transfer your personal information to outside parties. Visitor data is accessible only to authorized BARTI employees and gatekeepers as required for visitor management.',
+            'We do not sell, trade, or transfer your personal information to outside parties. Visitor data is accessible only to authorized personnel within your organization as required for visitor management.',
       ),
       LegalSection(
         heading: '6. Visitor Photos',
@@ -168,7 +168,7 @@ class LegalContent {
             '• Correct inaccurate data\n'
             '• Request deletion of your data\n'
             '• Withdraw consent at any time\n\n'
-            'To exercise these rights, contact us at privacy@barti.gov.in.',
+            'To exercise these rights, contact us at support@shrameco.com.',
       ),
       LegalSection(
         heading: '9. Data Retention',
@@ -188,8 +188,8 @@ class LegalContent {
       LegalSection(
         heading: '12. Contact Us',
         body:
-            'Email: privacy@barti.gov.in\n'
-            'Address: BARTI, Pune, Maharashtra, India',
+            'Email: support@shrameco.com\n'
+            'Website: epravesh.com',
       ),
     ],
   );
@@ -204,7 +204,7 @@ class LegalContent {
       LegalSection(
         heading: '1. Grant of License',
         body:
-            'BARTI grants you a limited, non-exclusive, non-transferable, revocable license to install and use E-Pravesh solely for visitor management purposes at BARTI premises.',
+            'Shrameco grants you a limited, non-exclusive, non-transferable, revocable license to install and use E-Pravesh solely for visitor management purposes within your organization\'s premises.',
       ),
       LegalSection(
         heading: '2. Restrictions',
@@ -213,28 +213,28 @@ class LegalContent {
             '• Copy, modify, or distribute the App\n'
             '• Reverse engineer, decompile, or disassemble the App\n'
             '• Create derivative works based on the App\n'
-            '• Use the App for any commercial purpose outside of BARTI\'s authorized use\n'
+            '• Use the App for any commercial purpose beyond your organization\'s authorized use\n'
             '• Transfer the App or this license to any third party',
       ),
       LegalSection(
         heading: '3. Intellectual Property',
         body:
-            'The App and all its content, features, and functionality are owned by BARTI and protected by applicable intellectual property laws.',
+            'The App and all its content, features, and functionality are owned by Shrameco and protected by applicable intellectual property laws.',
       ),
       LegalSection(
         heading: '4. Updates',
         body:
-            'BARTI may provide updates, patches, or upgrades to the App. These updates may be required for continued use and are subject to this EULA.',
+            'Shrameco may provide updates, patches, or upgrades to the App. These updates may be required for continued use and are subject to this EULA.',
       ),
       LegalSection(
         heading: '5. Disclaimer of Warranties',
         body:
-            'THE APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. BARTI DOES NOT WARRANT THAT THE APP WILL BE ERROR-FREE, UNINTERRUPTED, OR SECURE.',
+            'THE APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. SHRAMECO DOES NOT WARRANT THAT THE APP WILL BE ERROR-FREE, UNINTERRUPTED, OR SECURE.',
       ),
       LegalSection(
         heading: '6. Limitation of Liability',
         body:
-            'TO THE MAXIMUM EXTENT PERMITTED BY LAW, BARTI SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP.',
+            'TO THE MAXIMUM EXTENT PERMITTED BY LAW, SHRAMECO SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE APP.',
       ),
       LegalSection(
         heading: '7. Termination',
@@ -248,7 +248,7 @@ class LegalContent {
       ),
       LegalSection(
         heading: '9. Contact',
-        body: 'For questions about this EULA, contact legal@barti.gov.in.',
+        body: 'For questions about this EULA, contact legal@shrameco.com.',
       ),
     ],
   );
@@ -287,11 +287,11 @@ class LegalContent {
         heading: 'How to Request Account Deletion',
         body:
             'To request account and data deletion:\n\n'
-            '1. Send an email to privacy@barti.gov.in with subject "Account Deletion Request"\n'
+            '1. Send an email to support@shrameco.com with subject "Account Deletion Request"\n'
             '2. Include your registered email address\n'
             '3. We will process your request within 30 days\n'
             '4. You will receive a confirmation email upon completion\n\n'
-            'Alternatively, contact your BARTI system administrator.',
+            'Alternatively, contact your organization\'s system administrator.',
       ),
       LegalSection(
         heading: 'Consequences of Deletion',
@@ -304,7 +304,7 @@ class LegalContent {
       LegalSection(
         heading: 'Contact for Data Requests',
         body:
-            'Email: privacy@barti.gov.in\nResponse time: Within 30 business days',
+            'Email: support@shrameco.com\nResponse time: Within 30 business days',
       ),
     ],
   );
@@ -324,19 +324,18 @@ class LegalContent {
       LegalSection(
         heading: 'Email',
         body:
-            'General Support: support@barti.gov.in\n'
-            'Privacy Inquiries: privacy@barti.gov.in\n'
-            'Legal Inquiries: legal@barti.gov.in',
+            'General Support: support@shrameco.com\n'
+            'Privacy Inquiries: support@shrameco.com\n'
+            'Legal Inquiries: legal@shrameco.com',
       ),
       LegalSection(
-        heading: 'Address',
-        body:
-            'BARTI\nDr Babasaheb Ambedkar Research and Training Institute\nPune, Maharashtra, India',
+        heading: 'Website',
+        body: 'epravesh.com',
       ),
       LegalSection(
         heading: 'Office Hours',
         body:
-            'Monday – Friday: 10:00 AM – 5:30 PM (IST)\n'
+            'Monday – Friday: 10:00 AM – 6:00 PM (IST)\n'
             'Saturday – Sunday: Closed\n'
             'Public Holidays: Closed',
       ),
@@ -344,7 +343,7 @@ class LegalContent {
         heading: 'Legal Requests',
         body:
             'For legal inquiries, data requests, or compliance matters:\n\n'
-            'Email: legal@barti.gov.in\n'
+            'Email: legal@shrameco.com\n'
             'Please specify the nature of your inquiry in the subject line (e.g., "GDPR Request", "Legal Inquiry").',
       ),
       LegalSection(

@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:visitor_management/core/services/tenant_config_service.dart';
+import 'package:visitor_management/core/widgets/legal_links_widget.dart';
 import 'package:visitor_management/src/organization/domain/entities/organization.dart';
 
 /// Screen for entering organization subdomain on first launch
@@ -160,12 +161,37 @@ class _SubdomainEntryScreenState extends State<SubdomainEntryScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Logo/Icon
-                  Icon(
-                    Icons.business,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.primary,
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.business,
+                      size: 50,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Brand name
+                  Text(
+                    'E-Pravesh',
+                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
 
                   // Title
                   Text(
@@ -313,6 +339,19 @@ class _SubdomainEntryScreenState extends State<SubdomainEntryScreen> {
                       _showHelpDialog();
                     },
                     child: const Text('Contact your administrator'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Legal links
+                  const LegalLinksWidget(),
+                  const SizedBox(height: 16),
+
+                  // Powered by
+                  Text(
+                    'Powered by Shrameco',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
                 ],
               ),

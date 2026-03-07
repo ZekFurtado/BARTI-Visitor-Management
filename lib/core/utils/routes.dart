@@ -80,18 +80,27 @@ class Routes {
         }
 
       case pendingVisitors:
-        final user = settings.arguments as LocalUser?;
-        if (user != null) {
+        if (settings.arguments is Map<String, dynamic>) {
+          final args = settings.arguments as Map<String, dynamic>;
+          final user = args['user'] as LocalUser?;
+          final effectiveRole = args['effectiveRole'] as String?;
+          if (user != null) {
+            return MaterialPageRoute(
+              builder: (context) => PendingVisitorsScreen(user: user, effectiveRole: effectiveRole),
+              settings: settings,
+            );
+          }
+        } else if (settings.arguments is LocalUser) {
+          final user = settings.arguments as LocalUser;
           return MaterialPageRoute(
             builder: (context) => PendingVisitorsScreen(user: user),
             settings: settings,
           );
-        } else {
-          return MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-            settings: const RouteSettings(name: login),
-          );
         }
+        return MaterialPageRoute(
+          builder: (context) => const LoginScreen(),
+          settings: const RouteSettings(name: login),
+        );
 
       case notifications:
         final user = settings.arguments as LocalUser?;

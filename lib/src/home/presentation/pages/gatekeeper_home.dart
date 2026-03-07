@@ -347,7 +347,10 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
               'View visitors waiting for approval',
               Icons.pending_actions,
               () {
-                Navigator.of(context).pushNamed(Routes.pendingVisitors, arguments: widget.user);
+                Navigator.of(context).pushNamed(
+                Routes.pendingVisitors,
+                arguments: {'user': widget.user, 'effectiveRole': 'gatekeeper'},
+              );
               },
             ),
           ],
@@ -378,7 +381,10 @@ class _GatekeeperHomeState extends State<GatekeeperHome> {
               ).pushNamed('/visitor_registration', arguments: widget.user);
               break;
             case 2:
-              log('Navigate to visitor list');
+              Navigator.of(context).pushNamed(
+                Routes.pendingVisitors,
+                arguments: {'user': widget.user, 'effectiveRole': 'gatekeeper'},
+              );
               break;
             case 3:
               log('Navigate to history');

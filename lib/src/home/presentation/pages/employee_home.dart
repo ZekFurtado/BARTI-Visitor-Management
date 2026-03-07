@@ -640,7 +640,10 @@ class _EmployeeHomeState extends State<EmployeeHome> {
             // Already on home
               break;
             case 1:
-              Navigator.of(context).pushNamed(Routes.pendingVisitors, arguments: widget.user);
+              Navigator.of(context).pushNamed(
+                Routes.pendingVisitors,
+                arguments: {'user': widget.user, 'effectiveRole': 'employee'},
+              );
               break;
             case 2:
               Navigator.of(context).pushNamed(Routes.notifications, arguments: widget.user);

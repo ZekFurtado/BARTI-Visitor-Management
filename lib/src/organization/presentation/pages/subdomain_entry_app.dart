@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:visitor_management/core/services/tenant_config_service.dart';
+import 'package:visitor_management/core/utils/routes.dart';
 import 'package:visitor_management/src/organization/presentation/pages/subdomain_entry_screen.dart';
 
 /// Minimal MaterialApp wrapper for SubdomainEntryScreen
@@ -25,6 +26,7 @@ class SubdomainEntryApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      onGenerateRoute: Routes.onGenerateRoute,
       home: SubdomainEntryScreen(tenantService: tenantService, onRestart: onRestart),
     );
   }

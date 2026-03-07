@@ -155,9 +155,9 @@ class LoginFormNew extends StatelessWidget {
               onPressed: () {},
               style: ButtonStyle(
                   foregroundColor: WidgetStatePropertyAll(
-                      Theme.of(context).colorScheme.onSurface),
+                      Theme.of(context).colorScheme.primary),
                   backgroundColor: WidgetStatePropertyAll(
-                      Theme.of(context).colorScheme.secondary)),
+                      Theme.of(context).colorScheme.surface)),
               child: const Text(
                 "Forgot Password?",
               ),
